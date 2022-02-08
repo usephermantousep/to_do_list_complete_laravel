@@ -43,31 +43,6 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    public function getDAttribute($value)
-    {
-        return (int) $value;
-    }
-
-    public function getWnAttribute($value)
-    {
-        return (int) $value;
-    }
-
-    public function getWrAttribute($value)
-    {
-        return (int) $value;
-    }
-
-    public function getMnAttribute($value)
-    {
-        return (int) $value;
-    }
-    
-    public function getMrAttribute($value)
-    {
-        return (int) $value;
-    }
-
     public function approval()
     {
         return $this->belongsTo(User::class,'approval_id');

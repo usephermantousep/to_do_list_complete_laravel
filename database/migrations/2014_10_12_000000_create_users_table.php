@@ -21,11 +21,11 @@ class CreateUsersTable extends Migration
             $table->foreignId('role_id');
             $table->foreignId('area_id');
             $table->foreignId('divisi_id');
-            $table->integer('d')->default(1);
-            $table->integer('wn');
-            $table->integer('wr');
-            $table->integer('mn');
-            $table->integer('mr');
+            $table->boolean('d')->default(true);
+            $table->boolean('wn');
+            $table->boolean('wr');
+            $table->boolean('mn');
+            $table->boolean('mr');
             $table->string('profile_picture')->nullable();
             $table->string('id_notif')->nullable();
             $table->foreignId('approval_id')->nullable();

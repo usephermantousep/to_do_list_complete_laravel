@@ -16,13 +16,14 @@ class CreateDailiesTable extends Migration
         Schema::create('dailies', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id');
+            $table->dateTime('date');
             $table->string('task');
-            $table->string('tipe')->default('plan');
-            $table->dateTime('tanggal');
-            $table->string('jam');
-            $table->integer('status')->default(0);
-            $table->double('value')->default(0);
-            $table->integer('is_update')->default(0);
+            $table->string('time')->nullable();
+            $table->boolean('status')->default(false);
+            $table->double('ontime')->default(0.0);
+            $table->boolean('isplan')->default(true);
+            $table->boolean('isupdate')->default(false);
+            $table->foreignId('tag_id')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

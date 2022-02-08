@@ -18,16 +18,15 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::withTrashed()->get();
         return view('user.index')
             ->with(
                 [
-                    'users' => $users,
+                    'users' => User::with(['area','role','divisi'])->withTrashed()->get(),
                     'title' => 'User',
                     'active' => 'user',
-                    'divisis' => Divisi::orderBy('name')->get(),
-                    'roles' => Role::orderBy('name')->get(),
-                    'approvals' => $users->whereIn('role_id', [3, 4, 5, 6]),
+                    'divisis' => [],
+                    'roles' => [],
+                    'approvals' => User::whereIn('role_id', [3, 4, 5, 6])->get(),
                 ]
             );
     }

@@ -5,7 +5,6 @@ namespace App\Helpers;
 use DateTime;
 use Carbon\Carbon;
 
-
 class ConvertDate
 {
 
@@ -13,7 +12,8 @@ class ConvertDate
     {
         $date = new DateTime();
         $date->setISODate($year, $week);
-        return $isStart ? Carbon::parse($date)->startOfWeek() : Carbon::parse($date)->endOfWeek();
+        $parse = Carbon::parse($date);
+        return $isStart ? $parse->startOfWeek() : $parse->endOfWeek();
     }
 
     public static function getEndOfMonth($year, $week)
