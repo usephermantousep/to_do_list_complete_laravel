@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Daily;
 use Illuminate\Database\Seeder;
+use Faker\Factory as Faker;
 
 class DailySeeder extends Seeder
 {
@@ -14,14 +15,24 @@ class DailySeeder extends Seeder
      */
     public function run()
     {
-        Daily::insert([
-            [
-                'user_id' => 1,
-                'task' => 'monitoring server',
-                'date' => now(),
-                'time' => '09:00 AM',
-                'status' => '0',
-            ],
-        ]);
+
+        $faker = Faker::create('id_ID');
+        for ($m=0; $m < 2; $m++) {
+            for ($u = 2; $u < 8; $u++) {
+                for ($i = 0; $i < 6; $i++) {
+                    for ($j = 1; $j < 6; $j++) {
+                        Daily::create(
+                            [
+                                'user_id' => $u,
+                                'task' => $faker->sentence(3),
+                                'date' => $i == 0 && $m == 0 ? now()->startOfWeek() : $m == 0 ? now()->startOfWeek()->addDay($i) : now()->startOfWeek()->addWeek($m)->addDay($i),
+                                'time' => 9 + $j . ':00',
+                            ],
+                        );
+                    }
+                }
+            }
+        }
+        
     }
 }

@@ -18,11 +18,4 @@ class Weekly extends Model
     {
         return $this->belongsTo(User::class);
     }
-
-    public function getValueAttribute($value)
-    {
-        if (is_int($value)) {
-            return number_format($value, 1, '.', ' ');
-        }
-    }
 }

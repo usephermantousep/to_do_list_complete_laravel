@@ -52,9 +52,9 @@ class UserSeeder extends Seeder
                 'divisi_id' => 4,
                 'd' => true,
                 'wn' => true,
-                'wr' => false,
+                'wr' => true,
                 'mn' => true,
-                'mr' => false,
+                'mr' => true,
                 'approval_id' => 2,
             ],
             [

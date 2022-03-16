@@ -32,11 +32,4 @@ class Daily extends Model
             return Carbon::parse($value)->getPreciseTimestamp(3);
         }
     }
-
-    public function getOntimeAttribute($value)
-    {
-        if (is_int($value)) {
-            return number_format($value, 1, '.', ' ');
-        }
-    }
 }

@@ -14,10 +14,10 @@ class SendNotif
         );
 
         $fields = array(
-            'app_id' => "787d6428-2b70-463d-a858-eec955e1a922",
+            'app_id' => "2edc35b0-dfab-42c0-9555-5bda70459f7c",
             'include_player_ids' => $id,
-            'large_icon' => '@drawable/msilogo',
-            'small_icon' => '@drawable/msilogo',
+            // 'large_icon' => '@drawable/msilogo',
+            // 'small_icon' => '@drawable/msilogo',
             'contents' => $content
         );
 

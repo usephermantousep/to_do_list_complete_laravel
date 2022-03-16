@@ -16,11 +16,13 @@ class CreateRequestsTable extends Migration
         Schema::create('requests', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id');
-            $table->foreignId('jenistodo_id');
-            $table->string('todo_before');
-            $table->string('todo_after');
+            $table->string('jenistodo');
+            $table->string('todo_request');
+            $table->string('todo_replace');
             $table->foreignId('approval_id');
-            $table->integer('status')->default(0);
+            $table->foreignId('approved_by')->nullable();
+            $table->timestamp('approved_at')->nullable();
+            $table->string('status');
             $table->softDeletes();
             $table->timestamps();
         });

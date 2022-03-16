@@ -1,13 +1,15 @@
 <?php
 
-use Carbon\Carbon;
 use App\Helpers\ConvertDate;
-use App\Helpers\ResponseFormatter;
 use Illuminate\Http\Request;
+use App\Helpers\ResponseFormatter;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\DailyController;
+use App\Http\Controllers\API\ResultController;
 use App\Http\Controllers\API\WeeklyController;
+use App\Http\Controllers\API\MonthlyController;
+use App\Http\Controllers\API\RequestTaskController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,18 +22,52 @@ use App\Http\Controllers\API\WeeklyController;
 |
 */
 
+Route::post('/user/login', [UserController::class, 'login']);
+
 Route::middleware('auth:sanctum')->group(function () {
+    ##DAILY
     Route::get('/daily', [DailyController::class, 'fetch']);
     Route::post('/daily', [DailyController::class, 'insert']);
     Route::get('/daily/delete/{id}', [DailyController::class, 'delete']);
     Route::get('/daily/change/{id}', [DailyController::class, 'change']);
     Route::post('/daily/edit/{id}', [DailyController::class, 'edit']);
+    Route::get('/daily/getuser', [DailyController::class, 'getTagUser']);
 
+    Route::get('/user', [UserController::class, 'fetch']);
     Route::get('/user/tag', [UserController::class, 'tag']);
+    Route::get('/user/team',[UserController::class,'team']);
 
+    ##WEEKLY
     Route::get('/weekly', [WeeklyController::class, 'fetch']);
     Route::post('/weekly', [WeeklyController::class, 'insert']);
-    Route::post('/daily/change',[WeeklyController::class,'change']);
+    Route::post('/weekly/change', [WeeklyController::class, 'change']);
+    Route::post('/weekly/edit/{id}', [WeeklyController::class, 'edit']);
+    Route::get('/weekly/delete/{id}', [WeeklyController::class, 'delete']);
+
+    ##MONTHLY
+    Route::get('/monthly', [MonthlyController::class, 'getmonthly']);
+    Route::post('/monthly', [MonthlyController::class, 'insert']);
+    Route::post('/monthly/change', [MonthlyController::class, 'change']);
+    Route::post('/monthly/edit/{id}', [MonthlyController::class, 'edit']);
+    Route::get('/monthly/delete/{id}', [MonthlyController::class, 'delete']);
+
+    ##USER
+    Route::post('/user/logout', [UserController::class, 'logout']);
+    Route::post('/user/changepicture', [UserController::class, 'profilepicture']);
+
+    ##RESULT
+    Route::get('/result', [ResultController::class, 'result']);
+    Route::get('/result/{id}/', [ResultController::class, 'resultbyuser']);
+
+
+    ##REQUEST
+    Route::get('/request', [RequestTaskController::class, 'fetchuser']);
+    Route::post('/request', [RequestTaskController::class, 'submit']);
+    Route::get('/request/approve', [RequestTaskController::class, 'fetchapprove']);
+    Route::post('/request/approve', [RequestTaskController::class, 'approve']);
+    Route::post('/request/reject', [RequestTaskController::class, 'reject']);
+    Route::post('/request/cancel', [RequestTaskController::class, 'cancel']);
+
 });
 
 Route::get('/date', function (Request $request) {
@@ -42,10 +78,7 @@ Route::get('/date', function (Request $request) {
         'sunday' => $sunday->subSecond(1)->getPreciseTimestamp(3)
     ], 'berhasil');
 });
-
-Route::post('/user', [UserController::class, 'login']);
-
-
+Route::post('/testsubmit', [RequestTaskController::class, 'submit']);
 Route::get('/tes', function (Request $request) {
 
     $week_number = $request->minggu;
@@ -77,7 +110,7 @@ Route::get('/tes', function (Request $request) {
             echo "</br>";
         }
     } else {
-        if ($monday->endOfMonth()->diffInDays($sunday) < 3) {
+        if ($monday->endOfMonth()->diffInDays($sunday) < 4) {
             ##kalo senin dan sabtu berbeda bulan maka jika hari terakhir dari bulan ini kurang dari sama dengan 3 dari hari sabtu ini maka tarik data bulan yang masuk dalam senin
             echo "INI UNTUK WEEKLY AKHIR BULAN AKHIR";
             echo "</br>";

@@ -17,8 +17,12 @@ class UserController extends Controller
 
     public function fetch()
     {
-        $user = User::with(['area', 'divisi'])->where('id', Auth::user()->id)->first();
-        return ResponseFormatter::success($user, 'berhasil');
+        try {
+            $user = User::with('area', 'divisi', 'role')->where('id', Auth::user()->id)->first();
+            return ResponseFormatter::success($user, 'Selamat datang kembali ' . Auth::user()->nama_lengkap);
+        } catch (Exception $e) {
+            return ResponseFormatter::error(null, 'Gagal login');
+        }
     }
 
     /**
@@ -45,32 +49,68 @@ class UserController extends Controller
                 ], 'Gagal login, cek kembali username dan password anda', 500);
             }
 
-            $user = User::with(['area', 'divisi'])->where('username', $request->username)->first();
+            $user = User::where('username', $request->username)->first();
             if (!Hash::check($request->password, $user->password, [])) {
                 throw new Exception('Invalid Credentials');
             }
+            $user->id_notif = $request->id_notif;
+            $user->update();
 
             $tokenResult = $user->createToken('authToken')->plainTextToken;
             return ResponseFormatter::success([
                 'access_token' => $tokenResult,
                 'token_type' => 'Bearer',
                 'user' => $user
-            ], 'Authenticated');
+            ], 'Selamat datang kembali ' . Auth::user()->nama_lengkap);
         } catch (Exception $error) {
-            return ResponseFormatter::error([
-                'message' => 'Something went wrong',
-                'error' => $error,
-            ], 'Authentication Failed', 500);
+            return ResponseFormatter::error(null, $error->getMessage(), 500);
         }
     }
 
-    public function tag()
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return ResponseFormatter::success(null, 'Sampai jumpa kembali ' . Auth::user()->nama_lengkap);
+    }
+
+    public function tag(Request $request)
     {
         try {
-            $user = User::with('area','role','divisi')->where('role_id','<=',Auth::user()->role_id)->get()->except([Auth::id(),1]);
-            return ResponseFormatter::success($user,'berhasil');
+            $user = User::with('area', 'role', 'divisi')->where('role_id', '<=', Auth::user()->role_id)->get()->except([Auth::id(), 1]);
+            return ResponseFormatter::success($user, 'berhasil');
         } catch (Exception $e) {
-            return ResponseFormatter::error(null,$e->getMessage());
+            return ResponseFormatter::error(null, $e->getMessage());
+        }
+    }
+
+    public function profilepicture(Request $request)
+    {
+        try {
+            $user = User::findOrFail(Auth::id());
+            if ($user->profile_picture) {
+                $file_path = storage_path('app/public/' . $user->profile_picture);
+                unlink($file_path);
+            }
+            ##buat nama gambar
+            $imageName = Auth::user()->username . date('ymdHis') . '.' . $request->image->extension();
+
+            $request->image->move(storage_path('app/public/'), $imageName);
+            $user->profile_picture = $imageName;
+            $user->save();
+            return ResponseFormatter::success(null, 'Berhasil mengganti gambar');
+        } catch (Exception $e) {
+            return ResponseFormatter::error(null, $e->getMessage());
+        }
+    }
+
+    public function team(Request $request)
+    {
+        try {
+            $user = User::with('area', 'role', 'divisi')->where('divisi_id', Auth::user()->divisi_id)->orderBy('nama_lengkap')->get()->except([Auth::id(), 1]);
+            return ResponseFormatter::success($user, 'berhasil');
+        } catch (Exception $e) {
+            return ResponseFormatter::error(null, $e->getMessage());
         }
     }
 }
