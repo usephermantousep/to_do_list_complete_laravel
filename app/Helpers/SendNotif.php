@@ -16,8 +16,8 @@ class SendNotif
         $fields = array(
             'app_id' => "2edc35b0-dfab-42c0-9555-5bda70459f7c",
             'include_player_ids' => $id,
-            // 'large_icon' => '@drawable/msilogo',
-            // 'small_icon' => '@drawable/msilogo',
+            // 'large_icon' => '@drawable/dndcolor',
+            'small_icon' => '@drawable/dndcolor',
             'contents' => $content
         );
 
