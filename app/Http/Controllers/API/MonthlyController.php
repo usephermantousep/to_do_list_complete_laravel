@@ -165,4 +165,36 @@ class MonthlyController extends Controller
             return ResponseFormatter::error(null, $e->getMessage());
         }
     }
+
+    public function copy(Request $request)
+    {
+        try {
+            $monthlys = Monthly::where('date', date('y-m-d',strtotime($request->frommonth)))
+                ->where('user_id', Auth::id())
+                ->where('is_update', 0)
+                ->where('is_add', 0)
+                ->get()
+                ->toArray();
+            if(!$monthlys){
+                return ResponseFormatter::error(null, 'Tidak bisa menduplikat monthly dari monthly yang kosong');
+            }
+            foreach ($monthlys as $monthly) {
+                unset($monthly['id']);
+                if ($monthly['tipe'] == 'NON') {
+                    $monthly['status_non'] = 0;
+                } else {
+                    $monthly['value_actual'] = 0;
+                    $monthly['status_result'] = 0;
+                }
+                $monthly['value'] = 0;
+                $monthly['date'] = Carbon::parse($request->tomonth)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'));
+
+                Monthly::create($monthly);
+            }
+            return ResponseFormatter::success(null, 'Berhasil menduplikat monthly');
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            return ResponseFormatter::error(null, $e->getMessage());
+        }
+    }
 }

@@ -226,6 +226,8 @@ class RequestTaskController extends Controller
                         if ($date < now()->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->startOfDay()->subDay(1)) {
                             return ResponseFormatter::error(null, 'Task replace tidak boleh kurang dari ' . now()->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->startOfDay()->subDay(1)->format('d M Y'));
                         }
+                        $daily['time'] = date('H:i', strtotime($daily['time']));
+
                         $insert = Daily::create($daily);
                         array_push($taskReplacingId, $insert->id);
                     }
@@ -394,7 +396,7 @@ class RequestTaskController extends Controller
             $requested->approved_at = now();
             $requested->save();
             if ($requested->user->approval->id_notif) {
-                SendNotif::sendMessage('Request task ' . $requested->jenistodo . ' di tolak oleh ' . Auth::user()->nama_lengkap, array($requested->user->approval->id_notif));
+                SendNotif::sendMessage('Request task ' . $requested->jenistodo . ' di tolak oleh ' . Auth::user()->nama_lengkap, array($requested->user->id_notif));
             }
             return ResponseFormatter::success(null, 'Berhasil menolak request');
         } catch (Exception $e) {

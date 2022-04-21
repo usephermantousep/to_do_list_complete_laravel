@@ -15,9 +15,14 @@
                                         <button class="badge bg-primary mx-3 elevation-0">EXPORT
                                             ALL</button>
                                     </a>
-                                    <a href="#"><button class="badge bg-success mx-3 elevation-0" data-toggle="modal"
-                                            data-target="#addUser">+ ADD</button>
+                                    <a href="/user/template"><button class="badge bg-warning mx-3 elevation-0">TEMPLATE
+                                            IMPORT</button>
                                     </a>
+                                    <a href="#"><button class="badge bg-success mx-3 elevation-0" data-toggle="modal"
+                                            data-target="#imporUser">IMPORT</button>
+                                        <a href="/user/create"><button class="badge bg-success mx-3 elevation-0">+
+                                                ADD</button>
+                                        </a>
                                 </div>
                                 <div class="card-tools">
                                     <div class="input-group input-group-sm" style="width: 150px;">
@@ -116,20 +121,22 @@
                                                     AKTIF
                                                 @endif
                                             </td>
-                                             <td>
-                                                 <a href="/user/{{ $user->id }}" class="badge bg-warning"><span><i
+                                            <td>
+                                                <a href="/user/{{ $user->id }}" class="badge bg-warning"><span><i
                                                             class="fas fa-edit"></i></span></a>
                                                 @if ($user->deleted_at)
-                                                     <a href="/user/active/{{ $user->id }}" class="badge bg-success" onclick="return confirm('Mengaktifkan kembali user {{ $user->nama_lengkap }}?')"><span><i
-                                                            class="far fa-check-circle"></i></span></a>
+                                                    <a href="/user/active/{{ $user->id }}" class="badge bg-success"
+                                                        onclick="return confirm('Mengaktifkan kembali user {{ $user->nama_lengkap }}?')"><span><i
+                                                                class="far fa-check-circle"></i></span></a>
                                                 @else
-                                                   <a href="/user/delete/{{ $user->id }}" class="badge bg-danger" onclick="return confirm('Apalah anda yakin menonaktifkan user {{ $user->nama_lengkap }}?')"><span><i
-                                                            class="far fa-times-circle"></i></span></a>
+                                                    <a href="/user/delete/{{ $user->id }}" class="badge bg-danger"
+                                                        onclick="return confirm('Apalah anda yakin menonaktifkan user {{ $user->nama_lengkap }}?')"><span><i
+                                                                class="far fa-times-circle"></i></span></a>
                                                 @endif
                                             </td>
                                             <td>
-                                                
-                                                
+
+
                                             </td>
                                         </tr>
                                     @endforeach
@@ -140,103 +147,35 @@
                     </div>
                     <!-- /.card -->
                 </div>
+                <div class="d-flex justify-content-center">
+                    {{ $users->links() }}
+                </div>
             </div>
-            </div><!-- /.container-fluid -->
         </section>
     </section>
-    <!-- /.content -->
 
     <!-- Modal -->
-    <form action="/user" method="POST">
+    <form action="/user/import" method="POST" enctype="multipart/form-data">
         @csrf
-        <div class="modal fade" id="addUser" tabindex="-1" aria-labelledby="addUserLabel" aria-hidden="true">
+        <div class="modal fade" id="imporUser" tabindex="-1" aria-labelledby="imporUserLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="addUserLabel">Add User</h5>
+                        <h5 class="modal-title" id="imporUserLabel">Import User</h5>
                     </div>
                     <div class="modal-body">
                         <div class="col-12 mt-3">
-                            <label for="username" class="form-label">Username</label>
-                            <input class="form-control" type="text" id="username" name="username" required>
-                        </div>
-                        <div class="col-12 mt-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input class="form-control" type="text" id="password" name="password" required>
-                        </div>
-                        <div class="col-12 mt-3">
-                            <label for="namalengkap" class="form-label">Nama lengkap</label>
-                            <input class="form-control" type="text" id="namalengkap" name="namalengkap" required>
-                        </div>
-                        <div class="row">
-                            <div class="col-6 mt-3">
-                                <label for="divisi" class="form-label">Divisi</label>
-                                <select class="custom-select" id="divisi" name="divisi" required>
-                                    @foreach ($divisis as $divisi)
-                                        <option value="{{ $divisi->id }}">{{ $divisi->name }} -
-                                            {{ $divisi->area->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-6 mt-3">
-                                <label for="role" class="form-label">Role</label>
-                                <select class="custom-select" id="role" name="role" required>
-                                    @foreach ($roles as $role)
-                                        <option value="{{ $role->id }}">{{ $role->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-6 mt-3">
-                                <label for="weeklynon" class="form-label">Weekly Non</label>
-                                <select class="custom-select" id="weeklynon" name="weeklynon" required>
-                                    <option value="0">NO</option>
-                                    <option value="1">YES</option>
-                                </select>
-                            </div>
-                            <div class="col-6 mt-3">
-                                <label for="weeklyresult" class="form-label">Weekly Result</label>
-                                <select class="custom-select" id="weeklyresult" name="weeklyresult" required>
-                                    <option value="0">NO</option>
-                                    <option value="1">YES</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-6 mt-3">
-                                <label for="monthlynon" class="form-label">Monthly Non</label>
-                                <select class="custom-select" id="monthlynon" name="monthlynon" required>
-                                    <option value="0">NO</option>
-                                    <option value="1">YES</option>
-                                </select>
-                            </div>
-                            <div class="col-6 mt-3">
-                                <label for="monthlyresult" class="form-label">Monthly Result</label>
-                                <select class="custom-select" id="monthlyresult" name="monthlyresult" required>
-                                    <option value="0">NO</option>
-                                    <option value="1">YES</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-12 mt-3">
-                            <label for="approval" class="form-label">Approval Person</label>
-                            <select class="custom-select" id="approval" name="approval" required>
-                                @foreach ($approvals as $approval)
-                                    <option value="{{ $approval->id }}">{{ $approval->nama_lengkap }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <label for="formFile" class="form-label">Pilih File</label>
+                            <input class="form-control" type="file" id="formFile" name="file">
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Add </button>
+                        <button type="submit" class="btn btn-primary">Import</button>
                     </div>
                 </div>
             </div>
         </div>
     </form>
+    <!-- /.content -->
 @endsection

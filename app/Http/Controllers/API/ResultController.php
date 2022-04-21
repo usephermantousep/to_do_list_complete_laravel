@@ -26,8 +26,8 @@ class ResultController extends Controller
             for ($i = 0; $i < 7; $i++) {
                 $monday = ConvertDate::getMondayOrSaturday($year, $week, true);
                 $i == 0 ?
-                    $daily = Daily::where('date', $monday)->where('user_id', $user->id)->get() :
-                    $daily = Daily::where('date', $monday->addDay($i))->where('user_id', $user->id)->get();
+                    $daily = Daily::where('date', $monday)->where('user_id', $user->id)->orderBy('time')->get() :
+                    $daily = Daily::where('date', $monday->addDay($i))->where('user_id', $user->id)->orderBy('time')->get();
 
                 if (count($daily) > 0) {
                     array_push($dailys, $daily);
@@ -66,8 +66,8 @@ class ResultController extends Controller
             for ($i = 0; $i < 7; $i++) {
                 $monday = ConvertDate::getMondayOrSaturday($year, $week, true);
                 $i == 0 ?
-                    $daily = Daily::where('date', $monday)->where('user_id', $id)->get() :
-                    $daily = Daily::where('date', $monday->addDay($i))->where('user_id', $id)->get();
+                    $daily = Daily::where('date', $monday)->where('user_id', $id)->orderBy('time')->get() :
+                    $daily = Daily::where('date', $monday->addDay($i))->where('user_id', $id)->orderBy('time')->get();
 
                 if (count($daily) > 0) {
                     array_push($dailys, $daily);

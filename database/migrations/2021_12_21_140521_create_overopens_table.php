@@ -17,6 +17,10 @@ class CreateOveropensTable extends Migration
             $table->id();
             $table->foreignId('user_id');
             $table->integer('week');
+            $table->integer('year');
+            $table->integer('daily')->default(0);
+            $table->integer('weekly')->default(0);
+            $table->integer('monthly')->default(0);
             $table->integer('point');
             $table->softDeletes();
             $table->timestamps();

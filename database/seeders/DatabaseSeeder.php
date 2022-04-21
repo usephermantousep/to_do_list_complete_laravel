@@ -17,10 +17,10 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             AreaSeeder::class,
             DivisiSeeder::class,
-            DailySeeder::class,
+            // DailySeeder::class,
             RoleSeeder::class,
-            WeeklySeeder::class,
-            MonthlySeeder::class,
+            // WeeklySeeder::class,
+            // MonthlySeeder::class,
         ]);
     }
 }

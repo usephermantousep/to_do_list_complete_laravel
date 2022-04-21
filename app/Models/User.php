@@ -43,6 +43,13 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    public function scopeFilter($query)
+    {
+        if(request('search')){
+            $query->where('nama_lengkap',"like",'%'.request('search').'%');
+        }
+    }
+
     public function approval()
     {
         return $this->belongsTo(User::class,'approval_id');

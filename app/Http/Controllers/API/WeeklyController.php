@@ -24,7 +24,7 @@ class WeeklyController extends Controller
             $weekly = Weekly::where('week', $request->week)
                 ->where('year', $request->year)
                 ->where('user_id', Auth::id())
-                ->orderBy('task')
+                ->orderBy('created_at')
                 ->get();
             return ResponseFormatter::success($weekly, 'berhasil');
         } catch (Exception $e) {
@@ -39,7 +39,7 @@ class WeeklyController extends Controller
             $monday = ConvertDate::getMondayOrSaturday($data['year'], $data['week'], true);
             if (Auth::user()->area_id == 2 && now() > $monday->addDay(1)->addHour(10)) {
                 return ResponseFormatter::error(null, 'Tidak bisa menambahkan weekly di week ' . $request->week . ' sudah lebih dari hari selasa jam 10:00');
-            } else if (now() > $monday->addHour(17)) {
+            } else if (Auth::user()->area_id =! 2 && now() > $monday->addHour(17)) {
                 return ResponseFormatter::error(null, 'Tidak bisa menambahkan weekly di week ' . $request->week . ' sudah lebih dari hari senin jam 17:00');
             }
             $data['user_id'] = Auth::id();
@@ -54,6 +54,7 @@ class WeeklyController extends Controller
     {
         try {
             $weekly = Weekly::findOrfail($request->id);
+
             $requesteds = ModelsRequest::where('user_id', Auth::id())->get();
             foreach ($requesteds as $requested) {
                 $idTaskExistings = explode(',', $requested->todo_request);
@@ -74,7 +75,7 @@ class WeeklyController extends Controller
 
             if (Auth::user()->area_id == 2 && now() > $monday->addDay(8)->addHour(10)) {
                 return ResponseFormatter::error(null, 'Tidak bisa merubah status weekly sudah lebih dari hari selasa jam 10:00');
-            } else if (now() > $monday->addDay(7)->addHour(17)) {
+            } else if (Auth::user()->area_id != 2 && now() > $monday->addDay(7)->addHour(17)) {
                 return ResponseFormatter::error(null, 'Tidak bisa merubah status weekly sudah lebih dari hari senin jam 17:00');
             }
 
@@ -117,7 +118,7 @@ class WeeklyController extends Controller
             $monday = ConvertDate::getMondayOrSaturday($weekly->year, $weekly->week, true);
             if (Auth::user()->area_id == 2 && now() > $monday->addDay(1)->addHour(10)) {
                 return ResponseFormatter::error(null, 'Tidak bisa menghapus weekly sudah lebih dari hari selasa jam 10:00');
-            } else if (now() > $monday->addHour(17)) {
+            } else if (Auth::user()->area_id != 2 && now() > $monday->addHour(17)) {
                 return ResponseFormatter::error(null, 'Tidak bisa menghapus weekly sudah lebih dari hari senin jam 17:00');
             }
             $weekly->forceDelete();
@@ -151,7 +152,7 @@ class WeeklyController extends Controller
             $monday = ConvertDate::getMondayOrSaturday($weekly->year, $weekly->week, true);
             if (Auth::user()->area_id == 2 && now() > $monday->addDay(1)->addHour(10)) {
                 return ResponseFormatter::error(null, 'Tidak bisa merubah weekly sudah lebih dari hari selasa jam 10:00');
-            } else if (now() > $monday->addHour(17)) {
+            } else if (Auth::user()->area_id != 2 && now() > $monday->addHour(17)) {
                 return ResponseFormatter::error(null, 'Tidak bisa merubah weekly sudah lebih dari hari senin jam 17:00');
             }
             if ($weekly->tipe == 'RESULT') {
@@ -159,6 +160,43 @@ class WeeklyController extends Controller
             }
             $weekly->update($data);
             return ResponseFormatter::success(null, 'Berhasil merubah weekly');
+        } catch (Exception $e) {
+            return ResponseFormatter::error(null, $e->getMessage());
+        }
+    }
+
+    public function copy(Request $request)
+    {
+        try {
+            $monday = ConvertDate::getMondayOrSaturday($request->toyear, $request->toweek, true);
+
+            if (Auth::user()->area_id == 2 && now() > $monday->addDay(1)->addHour(10)) {
+                return ResponseFormatter::error(null, 'Tidak bisa menduplikat weekly sudah lebih dari hari selasa jam 10:00');
+            } else if (Auth::user()->area_id != 2 && now() > $monday->addHour(17)) {
+                return ResponseFormatter::error(null, 'Tidak bisa menduplikat weekly sudah lebih dari hari senin jam 17:00');
+            }
+            $weeklys = Weekly::where('week', $request->fromweek)
+                ->where('year', $request->fromyear)
+                ->where('user_id', Auth::id())
+                ->where('is_update', 0)
+                ->where('is_add', 0)
+                ->get()
+                ->toArray();
+            foreach ($weeklys as $weekly) {
+                unset($weekly['id']);
+                if ($weekly['tipe'] == 'NON') {
+                    $weekly['status_non'] = 0;
+                } else {
+                    $weekly['value_actual'] = 0;
+                    $weekly['status_result'] = 0;
+                }
+                $weekly['value'] = 0;
+                $weekly['week'] = $request->toweek;
+                $weekly['year'] = $request->toyear;
+
+                Weekly::create($weekly);
+            }
+            return ResponseFormatter::success(null, 'Berhasil menduplikat weekly');
         } catch (Exception $e) {
             return ResponseFormatter::error(null, $e->getMessage());
         }

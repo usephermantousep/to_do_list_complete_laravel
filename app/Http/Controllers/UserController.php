@@ -2,12 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\TemplateExport;
+use App\Models\Area;
 use App\Models\Divisi;
 use App\Models\Role;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\UsersExport;
+use App\Imports\UsersImport;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class UserController extends Controller
 {
@@ -21,11 +26,9 @@ class UserController extends Controller
         return view('user.index')
             ->with(
                 [
-                    'users' => User::with(['area','role','divisi'])->withTrashed()->get(),
+                    'users' => User::with(['area', 'role', 'divisi', 'approval'])->withTrashed()->filter()->simplePaginate(100),
                     'title' => 'User',
                     'active' => 'user',
-                    'divisis' => [],
-                    'roles' => [],
                     'approvals' => User::whereIn('role_id', [3, 4, 5, 6])->get(),
                 ]
             );
@@ -38,11 +41,13 @@ class UserController extends Controller
      */
     public function create()
     {
-        $roles = Role::all();
+        $areas = Area::all();
+        $roles = Role::all()->except(1);
         $divisis = Divisi::all();
         return view('user.create')->with([
             'roles' => $roles,
             'divisis' => $divisis,
+            'areas' => $areas,
             'title' => 'Create User',
             'active' => 'user',
         ]);
@@ -60,24 +65,24 @@ class UserController extends Controller
             $request->validate([
                 'username' => 'required||min:3',
                 'password' => 'required||min:3',
-                'namalengkap' => 'required||min:3',
+                'nama_lengkap' => 'required||min:3',
             ]);
             $existing = User::where('username', $request->username)->get();
-            if ($existing) {
+            if (count($existing)) {
                 return redirect('/user')->with(['error' => "Gagal menambahkan user baru, username sudah di pakai"]);
             }
             User::create([
                 'username' => strtolower(preg_replace('/\s+/', '', $request->username)),
                 'password' => bcrypt($request->password),
-                'nama_lengkap' => strtoupper($request->namalengkap),
-                'role_id' => (int) $request->role,
-                'area_id' => Divisi::find($request->divisi)->area->id,
-                'divisi_id' => (int) $request->divisi,
-                'wn' => $request->weeklynon,
-                'wr' => $request->weeklyresult,
-                'mn' => $request->monthlynon,
-                'mr' => $request->monthlyresult,
-                'approval_id' => $request->approval,
+                'nama_lengkap' => strtoupper($request->nama_lengkap),
+                'role_id' => (int) $request->role_id,
+                'area_id' => (int) $request->area_id,
+                'divisi_id' => (int) $request->divisi_id,
+                'wn' => $request->wn,
+                'wr' => $request->wr,
+                'mn' => $request->mn,
+                'mr' => $request->mn,
+                'approval_id' => $request->approval_id,
             ]);
 
             return redirect('/user')->with(['success' => "Berhasil menambahkan user baru."]);
@@ -126,13 +131,24 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            $token = PersonalAccessToken::where('tokenable_id', $id)->get()->first;
+            if ($token) {
+                $token->delete();
+            }
             $user = User::withTrashed()->find($id);
+
             $request->validate([
                 'username' => ['required', 'string', 'max:255', 'unique:users,username,' . $user->id],
             ]);
+
             $data = $request->all();
-            $data['password'] = bcrypt($request->password);
+            $data['password'] = $user->password;
+            if ($request->password) {
+                $data['password'] = bcrypt($request->password);
+            }
+
             $data['nama_lengkap'] = strtoupper($request->nama_lengkap);
+
             $user->update($data);
             return redirect('user')->with(['success' => 'berhasil edit user']);
         } catch (Exception $e) {
@@ -150,6 +166,10 @@ class UserController extends Controller
     public function destroy($id)
     {
         $user = User::find($id);
+        $token = PersonalAccessToken::where('tokenable_id', $id)->get()->first;
+        if ($token) {
+            $token->delete();
+        }
         $user->delete();
         return redirect('/user')->with(['success' => "Berhasil menghapus user " . $user->nama_lengkap]);
     }
@@ -160,5 +180,38 @@ class UserController extends Controller
         $user->deleted_at = null;
         $user->save();
         return redirect('/user')->with(['success' => "Berhasil mengatifkan kembali user " . $user->nama_lengkap]);
+    }
+
+    public function getdivisi(Request $request, $id)
+    {
+        $divisi = Divisi::where('area_id', $id)->get();
+        return response()->json($divisi);
+    }
+
+    public function getapproval(Request $request)
+    {
+        $approval = User::where('role_id', 6)->where('area_id', $request->areaid)
+            ->orWhereIn('role_id', [3, 4, 5])->where('divisi_id', $request->divisiid)->get();
+        return response()->json($approval);
+    }
+
+    public function export()
+    {
+        return Excel::download(new UsersExport, 'user.xlsx');
+    }
+
+    public function template()
+    {
+        return Excel::download(new TemplateExport, 'user_template.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        $file = $request->file('file');
+        $namaFile = $file->getClientOriginalName();
+        $file->move(public_path('import'), $namaFile);
+
+        Excel::import(new UsersImport, public_path('/import/' . $namaFile));
+        return redirect('user')->with(['success' => 'berhasil import user']);
     }
 }

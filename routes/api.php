@@ -28,6 +28,8 @@ Route::middleware('auth:sanctum')->group(function () {
     ##DAILY
     Route::get('/daily', [DailyController::class, 'fetch']);
     Route::post('/daily', [DailyController::class, 'insert']);
+    Route::get('/daily/fetchweek',[DailyController::class,'fetchweek']);
+    Route::post('/daily/copy',[DailyController::class,'copy']);
     Route::get('/daily/delete/{id}', [DailyController::class, 'delete']);
     Route::get('/daily/change/{id}', [DailyController::class, 'change']);
     Route::post('/daily/edit/{id}', [DailyController::class, 'edit']);
@@ -40,6 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
     ##WEEKLY
     Route::get('/weekly', [WeeklyController::class, 'fetch']);
     Route::post('/weekly', [WeeklyController::class, 'insert']);
+    Route::post('/weekly/copy', [WeeklyController::class, 'copy']);
     Route::post('/weekly/change', [WeeklyController::class, 'change']);
     Route::post('/weekly/edit/{id}', [WeeklyController::class, 'edit']);
     Route::get('/weekly/delete/{id}', [WeeklyController::class, 'delete']);
@@ -47,6 +50,8 @@ Route::middleware('auth:sanctum')->group(function () {
     ##MONTHLY
     Route::get('/monthly', [MonthlyController::class, 'getmonthly']);
     Route::post('/monthly', [MonthlyController::class, 'insert']);
+    Route::post('/monthly', [MonthlyController::class, 'insert']);
+    Route::post('/monthly/copy', [MonthlyController::class, 'copy']);
     Route::post('/monthly/change', [MonthlyController::class, 'change']);
     Route::post('/monthly/edit/{id}', [MonthlyController::class, 'edit']);
     Route::get('/monthly/delete/{id}', [MonthlyController::class, 'delete']);

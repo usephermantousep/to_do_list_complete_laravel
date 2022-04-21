@@ -22,11 +22,11 @@
         <!-- /.login-logo -->
         <div class="card card-outline card-danger">
             <div class="card-header text-center">
-                <a href="/masuk" class="h1"><b>Grosir App</b></a>
+                <a href="#" class="h1"><b>DnD App</b></a>
             </div>
             <div class="card-body">
                 <p class="login-box-msg">Sign in</p>
-                <form action="/masuk" method="POST">
+                <form action="/login" method="POST">
                     @csrf
                     <div class="input-group mb-3">
                         <input type="text" class="form-control" placeholder="User Name" name="username" autofocus>

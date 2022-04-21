@@ -21,16 +21,16 @@ class SettingController extends Controller
         ]);
     }
 
-    public function roleedit(Request $request, $id)
-    {
-        $role = Role::findOrFail($id);
-        return view('setting.edit', [
-            'title' => 'Role',
-            'active' => 'setting',
-            'role' => $role,
+    // public function roleedit(Request $request, $id)
+    // {
+    //     $role = Role::findOrFail($id);
+    //     return view('setting.edit', [
+    //         'title' => 'Role',
+    //         'active' => 'setting',
+    //         'role' => $role,
 
-        ]);
-    }
+    //     ]);
+    // }
 
     public function roleadd(Request $request)
     {
@@ -66,6 +66,64 @@ class SettingController extends Controller
         }
     }
 
+    //AREA
+    public function area(Request $request)
+    {
+        $areas = Area::all();
+        return view('setting.index', [
+            'title' => 'Area',
+            'active' => 'setting',
+            'areas' => $areas,
+        ]);
+    }
+
+    public function areaadd(Request $request)
+    {
+        try {
+            $request->validate([
+                'name' => 'required',
+            ]);
+
+            Area::create([
+                'name' => preg_replace('/\s+/', '', strtoupper($request->name)),
+            ]);
+
+            return redirect('/setting/area')->with(['success' => "Berhasil menambahkan area baru"]);
+        } catch (Exception $e) {
+            return redirect('/setting/area')->with(['error' => "Gagal menambahkan area baru," . $e->getMessage()]);
+        }
+    }
+
+    // public function areaedit(Request $request, $id)
+    // {
+    //     $area = Area::findOrFail($id);
+
+    //     return view('setting.edit', [
+    //             'title' => 'Area',
+    //             'active' => 'setting',
+    //             'area' => $area,
+
+    //         ]);
+    // }
+
+    public function areaupdate(Request $request, $id)
+    {
+        try {
+            $request->validate([
+                'name' => 'required',
+            ]);
+
+            $area = Area::findOrFail($id);
+            $area->update([
+                'name' => preg_replace('/\s+/', '', strtoupper($request->name)),
+            ]);
+
+            return redirect('/setting/area')->with(['success' => "Berhasil update area"]);
+        } catch (Exception $e) {
+            return redirect('/setting/area')->with(['error' => "Gagal update area," . $e->getMessage()]);
+        }
+    }
+
     //DIVISI
     public function divisi(Request $request)
     {
@@ -84,12 +142,12 @@ class SettingController extends Controller
         try {
             $request->validate([
                 'name' => 'required',
-                'badanusaha_id' => 'required',
+                'area_id' => 'required',
             ]);
 
             Divisi::create([
                 'name' => preg_replace('/\s+/', '', strtoupper($request->name)),
-                'badanusaha_id' => $request->badanusaha_id,
+                'area_id' => $request->area_id,
             ]);
 
             return redirect('/setting/divisi')->with(['success' => "Berhasil menambahkan divisi baru"]);
@@ -98,17 +156,17 @@ class SettingController extends Controller
         }
     }
 
-    public function divedit(Request $request, $id)
-    {
-        $divisi = Divisi::findOrFail($id);
+    // public function divedit(Request $request, $id)
+    // {
+    //     $divisi = Divisi::findOrFail($id);
 
-        return view('setting.edit', [
-                'title' => 'Divisi',
-                'active' => 'setting',
-                'divisi' => $divisi,
+    //     return view('setting.edit', [
+    //             'title' => 'Divisi',
+    //             'active' => 'setting',
+    //             'divisi' => $divisi,
 
-            ]);
-    }
+    //         ]);
+    // }
 
     public function divupdate(Request $request, $id)
     {
@@ -126,5 +184,13 @@ class SettingController extends Controller
         } catch (Exception $e) {
             return redirect('/setting/divisi')->with(['error' => "Gagal update divisi," . $e->getMessage()]);
         }
+    }
+
+    public function download(Request $request)
+    {
+        return response()->download(public_path('/storage/apk/DnD.apk'), 'DnD.apk', [
+            'Content-Type' => 'application/vnd.android.package-archive',
+            'Content-Disposition' => 'attachment; filename="android.apk"',
+        ]);
     }
 }

@@ -28,8 +28,7 @@
                                         </div>
                                         <div class="mb-3 col-lg-6">
                                             <label for="password" class="form-label">Password</label>
-                                            <input type="text" class="form-control" id="password" name="password"
-                                                required>
+                                            <input type="text" class="form-control" id="password" name="password">
                                         </div>
                                     </div>
                                     <div class="mb-3">
@@ -39,10 +38,9 @@
                                                 <select class="custom-select col-lg-12" name="role_id" id="role_id"
                                                     required>
                                                     @foreach ($roles as $role)
-                                                        <option value="{{ $role->id }}" @if ($user->role_id === $role->id)
-                                                            selected
-                                                    @endif>
-                                                    {{ $role->name }}</option>
+                                                        <option value="{{ $role->id }}"
+                                                            @if ($user->role_id === $role->id) selected @endif>
+                                                            {{ $role->name }}</option>
                                                     @endforeach
                                                 </select>
                                             </div>
@@ -53,7 +51,7 @@
                                                     @foreach ($divisis as $divisi)
                                                         <option value="{{ $divisi->id }}"
                                                             {{ $divisi->id === $user->divisi_id ? 'selected' : '' }}>
-                                                            {{ $divisi->name.' - '.$divisi->area->name }}</option>
+                                                            {{ $divisi->name . ' - ' . $divisi->area->name }}</option>
                                                     @endforeach
                                                 </select>
                                             </div>
@@ -86,14 +84,14 @@
                                                     <option value="0" {{ $user->wr ? '-' : 'selected' }}>NO</option>
                                                 </select>
                                             </div>
-                                             <div class="col-lg-3">
+                                            <div class="col-lg-3">
                                                 <label for="mn" class="form-label col-lg-12">Monthly Non</label>
                                                 <select class="custom-select col-lg-12" id="mn" name="mn" required>
                                                     <option value="1" {{ $user->mn ? 'selected' : '' }}>YES</option>
                                                     <option value="0" {{ $user->mn ? '-' : 'selected' }}>NO</option>
                                                 </select>
                                             </div>
-                                             <div class="col-lg-3">
+                                            <div class="col-lg-3">
                                                 <label for="mr" class="form-label col-lg-12">Monthly Result</label>
                                                 <select class="custom-select col-lg-12" id="mr" name="mr" required>
                                                     <option value="1" {{ $user->mr ? 'selected' : '' }}>YES</option>

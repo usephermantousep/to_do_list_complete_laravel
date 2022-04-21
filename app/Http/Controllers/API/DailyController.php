@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Helpers\ConvertDate;
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
 use App\Models\Daily;
@@ -65,12 +66,15 @@ class DailyController extends Controller
 
             if (
                 now()->startOfDay()->startOfWeek() == $date->startOfWeek()
+                && Auth::user()->area_id != 2
                 && now() > now()->startOfDay()->startOfWeek()->addHour(17)
                 && $request->isplan
             ) {
                 return ResponseFormatter::error(null, "Tidak bisa menambahkan daily, sudah lebih dari hari hari senin Jam 17:00");
             }
-
+            if ($request->isplan) {
+                $data['time'] = date('H:i', strtotime($request->time));
+            }
             Daily::create($data);
             if ($request->tag) {
                 $users = array();
@@ -115,19 +119,20 @@ class DailyController extends Controller
             }
             $data = $request->all();
             $data['date'] = Carbon::parse(strtotime($request->date))->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'));
+            $data['time'] = date('H:i', strtotime($request->time));
             $daily = Daily::findOrFail($id);
 
             if ($daily->tag_id) {
                 return ResponseFormatter::error(null, "Tidak bisa merubah daily tag");
             }
             if (Carbon::parse($daily->date / 1000)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->weekOfYear <= now()->weekOfYear) {
-                if (Auth::user()->area_id == 2 && now() > Carbon::parse($daily->date / 1000)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->startOfWeek()->addDay(1)->addHour(10)) {
+                if (Auth::user()->area_id == 2 && now() > Carbon::parse($daily->date / 1000)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->addDay(1)->addHour(10)) {
                     return ResponseFormatter::error(null, "Tidak bisa merubah daily di week yang sudah berjalan dan lebih dari hari selasa jam 10.00");
-                } else if (now() > Carbon::parse($daily->date / 1000)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->startOfWeek()->addHour(17)) {
+                } else if (Auth::user()->area_id != 2 && now() > Carbon::parse($daily->date / 1000)->addHour(17)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))) {
                     return ResponseFormatter::error(null, "Tidak bisa merubah daily di week yang sudah berjalan dan lebih dari hari senin jam 17.00");
                 }
             }
-            $changes = Daily::where('task', $daily->task)->where('tag_id', Auth::id())->get();
+            $changes = Daily::where('task', $daily->task)->where('tag_id', Auth::id())->whereDate('date', date('y-m-d', $daily->date / 1000))->get();
             if ($changes) {
                 foreach ($changes as $change) {
                     $change->update($data);
@@ -160,7 +165,6 @@ class DailyController extends Controller
                     }
                 }
             }
-            $daily = Daily::findOrFail($id);
             if ($daily->tag_id) {
                 return ResponseFormatter::error(null, "Tidak bisa menghapus tag daily, tag daily hanya bisa di hapus oleh pembuatan tag");
             }
@@ -171,11 +175,11 @@ class DailyController extends Controller
             if (Carbon::parse($daily->date / 1000)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->weekOfYear <= now()->weekOfYear && !$daily->tag_id) {
                 if (Auth::user()->area_id == 2 && now() > Carbon::parse($daily->date / 1000)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->startOfWeek()->addDay(1)->addHour(10)) {
                     return ResponseFormatter::error(null, "Tidak bisa menghapus daily di week yang sudah berjalan dan lebih dari selasa jam 10.00");
-                } else if (now() > Carbon::parse($daily->date / 1000)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->startOfWeek()->addHour(17)) {
+                } else if (Auth::user()->area_id != 2 && now() > Carbon::parse($daily->date / 1000)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->startOfWeek()->addHour(17)) {
                     return ResponseFormatter::error(null, "Tidak bisa menghapus daily di week yang sudah berjalan dan lebih dari senin jam 17.00");
                 }
             }
-            $deletes = Daily::where('task', $daily->task)->where('tag_id', Auth::id())->get();
+            $deletes = Daily::where('task', $daily->task)->where('tag_id', Auth::id())->whereDate('date', date('y-m-d', $daily->date / 1000))->get();
             if ($deletes) {
                 foreach ($deletes as $delete) {
                     $delete->forceDelete();
@@ -204,7 +208,7 @@ class DailyController extends Controller
                 $idTaskReplaces = explode(',', $requested->todo_replace);
                 foreach ($idTaskReplaces as $idTaskReplace) {
                     if ($id == $idTaskReplace && $requested->status == 'PENDING') {
-                            return ResponseFormatter::error(null, "Tidak bisa merubah status, task ini ada di pengajuan request task");
+                        return ResponseFormatter::error(null, "Tidak bisa merubah status, task ini ada di pengajuan request task");
                     }
                 }
             }
@@ -247,6 +251,89 @@ class DailyController extends Controller
                     ->where('tag_id', Auth::id());
             })->get();
             return ResponseFormatter::success($users, 'Berhasil');
+        } catch (Exception $e) {
+            return ResponseFormatter::error(null, $e->getMessage());
+        }
+    }
+
+    public function copy(Request $request)
+    {
+        try {
+            $monday = ConvertDate::getMondayOrSaturday($request->year, $request->week, true);
+            $sunday = ConvertDate::getMondayOrSaturday($request->year, $request->week, false);
+            $mondayTo = ConvertDate::getMondayOrSaturday($request->year, $request->week, true);
+            if (Auth::user()->area_id == 2 && now() > $mondayTo->addWeek($request->addweek)->addDay(1)->addHour(10)) {
+                return ResponseFormatter::error(null, 'Tidak bisa menduplikat weekly sudah lebih dari hari selasa jam 10:00');
+            } else if (Auth::user()->area_id != 2 && now() > $mondayTo->addWeek($request->addweek)->addHour(17)) {
+                return ResponseFormatter::error(null, 'Tidak bisa menduplikat weekly sudah lebih dari hari senin jam 17:00');
+            }
+            $dailys = Daily::where('user_id', Auth::id())
+                ->where('isplan', 1)
+                ->where('tag_id', null)
+                ->where('isupdate', 0)
+                ->whereBetween('date', [$monday->format('y-m-d'), $sunday->format('y-m-d')])
+                ->get()
+                ->toArray();
+            foreach ($dailys as $daily) {
+                $taged = Daily::where('task', $daily['task'])
+                    ->whereDate('date', date('y-m-d', $daily['date'] / 1000))
+                    ->where('tag_id', Auth::id())
+                    ->get()
+                    ->toArray();
+                if ($taged) {
+                    foreach ($taged as $tag) {
+                        $user = User::find($tag['user_id']);
+                        if ($user) {
+                            $tag['date'] = Carbon::parse($tag['date'] / 1000)->addWeek($request->addweek)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'));
+                            $tag['time'] = date('H:i', strtotime($tag['time']));
+                            $tag['ontime'] = 0;
+                            $tag['status'] = 0;
+                            $tag['created_at'] = now();
+                            $tag['updated_at'] = now();
+                            unset($tag['id']);
+                            Daily::create($tag);
+                            if ($user->id_notif) {
+                                SendNotif::sendMessage('Anda menerima daily tag dari ' . Auth::user()->nama_lengkap . ' pada tanggal ' . date('d M Y', strtotime($tag['date'])) . ' dengan task ' . $tag['task'], array(User::find($tag['user_id'])->id_notif));
+                            }
+                        }
+                    }
+                }
+
+                $daily['date'] = Carbon::parse($daily['date'] / 1000)->addWeek($request->addweek)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'));
+                $daily['time'] = date('H:i', strtotime($daily['time']));
+                $daily['ontime'] = 0;
+                $daily['status'] = 0;
+                $daily['created_at'] = now();
+                $daily['updated_at'] = now();
+                unset($daily['id']);
+                Daily::create($daily);
+            }
+            return ResponseFormatter::success(null, 'Berhasil menduplikat daily');
+        } catch (Exception $e) {
+            return ResponseFormatter::error(null, $e->getMessage());
+        }
+    }
+
+    public function fetchweek(Request $request)
+    {
+        try {
+            $userId = Auth::id();
+            $week = $request->week;
+            $year = $request->year;
+
+            //GET ALL DAILY MONDAY TO SUNDAY
+            $dailys = array();
+            for ($i = 0; $i < 7; $i++) {
+                $monday = ConvertDate::getMondayOrSaturday($year, $week, true);
+                $i == 0 ?
+                    $daily = Daily::where('date', $monday)->where('user_id', $userId)->where('isplan', 1)->where('tag_id', null)->where('isupdate', 0)->orderBy('time')->get() :
+                    $daily = Daily::where('date', $monday->addDay($i))->where('user_id', $userId)->where('isplan', 1)->where('tag_id', null)->where('isupdate', 0)->orderBy('time')->get();
+
+                if (count($daily) > 0) {
+                    array_push($dailys, $daily);
+                }
+            }
+            return ResponseFormatter::success($dailys, 'Berhasil');
         } catch (Exception $e) {
             return ResponseFormatter::error(null, $e->getMessage());
         }
