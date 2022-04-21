@@ -19,7 +19,6 @@ class CreateCutpointsTable extends Migration
             $table->integer('point');
             $table->dateTime('periode');
             $table->string('alasan');
-            $table->string('keterangan')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });
