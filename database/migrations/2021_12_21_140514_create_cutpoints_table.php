@@ -18,7 +18,7 @@ class CreateCutpointsTable extends Migration
             $table->foreignId('user_id');
             $table->integer('point');
             $table->dateTime('periode');
-            $table->string('alasan');
+            $table->string('keterangan');
             $table->softDeletes();
             $table->timestamps();
         });

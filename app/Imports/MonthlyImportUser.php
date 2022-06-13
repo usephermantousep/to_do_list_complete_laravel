@@ -37,7 +37,7 @@ class MonthlyImportUser implements ToModel, WithHeadingRow
             return new Monthly([
                 'user_id' => $this->user->id,
                 'task' => $row['task'],
-                'date' => Carbon::parse($row['date']),
+                'date' => Carbon::parse($row['date'])->startOfMonth(),
                 'tipe' => $tipe,
                 'status_non' => 0,
             ]);
@@ -52,7 +52,7 @@ class MonthlyImportUser implements ToModel, WithHeadingRow
                 return new Monthly([
                     'user_id' => $this->user->id,
                     'task' => $row['task'],
-                    'date' => Carbon::parse($row['date']),
+                    'date' => Carbon::parse($row['date'])->startOfMonth(),
                     'tipe' => $tipe,
                     'value_plan' => preg_replace('/\s+/', '', $row['value_plan_result']),
                     'value_actual' => 0,

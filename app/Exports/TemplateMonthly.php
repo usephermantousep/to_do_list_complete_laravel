@@ -11,16 +11,20 @@ class TemplateMonthly implements WithHeadings, FromCollection
     use Exportable;
     public function collection()
     {
+        $date = now()->year . '-' . now()->month;
+        if(now()->month < 10){
+            $date = now()->year . '-0' . now()->month;
+        }
         return collect([
             [
-                'date' => '2022-05-01',
-                'task' => 'contoh task weekly non',
+                'date' => $date,
+                'task' => 'contoh task monthly non',
                 'tipe' => 'NON',
                 'value_plan_result' => '',
             ],
             [
-                'date' => '2022-05-01',
-                'task' => 'contoh task weekly result',
+                'date' => $date,
+                'task' => 'contoh task monthly result',
                 'tipe' => 'RESULT',
                 'value_plan_result' => '10000',
             ],

@@ -26,12 +26,20 @@ class WeeklyImportUser implements ToModel, WithHeadingRow
         $year = preg_replace('/\s+/', '', $row['year']);
         $week = preg_replace('/\s+/', '', $row['week']);
         $tipe = preg_replace('/\s+/', '', strtoupper($row['tipe']));
-        $monday = ConvertDate::getMondayOrSaturday($year, $week, true);
-        if ($this->user->area_id == 2 && now() > $monday->addDay(1)->addHour(10)) {
-            throw new Exception('Tidak bisa import weekly kurang dari minggu ini atau lebih dari selasa jam 10.00 di minggu yang sama');
+        if (auth()->user()->role_id != 1) {
+            $monday = ConvertDate::getMondayOrSaturday($year, $week, true);
+            if ($this->user->area_id == 2 && now() > $monday->addDay(1)->addHour(10)) {
+                throw new Exception('Tidak bisa import weekly week ' . now()->week . ' sudah lebih dari '.$monday->format('d M y'));
+            }
+            if ($this->user->area_id != 2 && now() > $monday->addHour(17)) {
+                throw new Exception('Tidak bisa import weekly week ' . now()->week . ' sudah lebih dari ' . $monday->format('d M y - H:i'));
+            }
         }
-        if ($this->user->area_id != 2 && now() > $monday->addHour(17)) {
-            throw new Exception('Tidak bisa import weekly kurang dari minggu ini atau lebih dari senin jam 17.00 di minggu yang sama');
+        if ($year <= now()->year && $week < now()->weekOfYear) {
+            throw new Exception("Tidak bisa import weekly kurang dari week " . now()->weekOfYear);
+        }
+        if ($week > 52 || $year < 2022 || $week < 0) {
+            throw new Exception("Tidak bisa import weekly lebih dari week 52 atau minimal tahun 2022");
         }
         if ($tipe == "NON") {
             return new Weekly([
@@ -47,7 +55,7 @@ class WeeklyImportUser implements ToModel, WithHeadingRow
                 throw new Exception('Untuk task bertipe result wajib isi kolom "value_plan_result"');
             }
             if (!ctype_digit(preg_replace('/\s+/', '', $row['value_plan_result']))) {
-                throw new Exception('Tidak bisa import monthly untuk kolom "value_plan_result" harus berisi nominal angka');
+                throw new Exception('Tidak bisa import weekly untuk kolom "value_plan_result" harus berisi nominal angka');
             }
             if ($this->user->wr) {
                 return new Weekly([

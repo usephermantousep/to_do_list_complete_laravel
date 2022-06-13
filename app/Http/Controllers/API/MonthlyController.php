@@ -62,7 +62,7 @@ class MonthlyController extends Controller
                 return ResponseFormatter::error(null, 'Tidak bisa merubah status monthly sudah lebih dari H+5 atau tanggal ' . $max->format('d M Y'));
             }
 
-            if ($request->value != null && $monthly->tipe == 'RESULT') {
+            if ($monthly->tipe == 'RESULT') {
                 $monthly['value_actual'] = $request->value;
                 $monthly['status_result'] = true;
                 $monthly['value'] = $monthly['value_actual'] / $monthly['value_plan'] > 1.2 ? 1.2 :  $monthly['value_actual'] / $monthly['value_plan'];
@@ -96,8 +96,7 @@ class MonthlyController extends Controller
             $data = $request->all();
             $data['user_id'] = Auth::id();
             $data['date'] = Carbon::parse(strtotime($request->date))
-                ->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))
-                ->startOfMonth();
+                ->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'));
             Monthly::create($data);
             return ResponseFormatter::success(null, 'Berhasil menambahkan monthly');
         } catch (Exception $e) {
@@ -127,7 +126,7 @@ class MonthlyController extends Controller
                         ->format('d M Y')
                 );
             }
-            $monthly->forceDelete();
+            $monthly->delete();
             return ResponseFormatter::success(null, 'Berhasil menghapus monthly');
         } catch (Exception $e) {
             return ResponseFormatter::error(null, $e->getMessage());
@@ -169,6 +168,9 @@ class MonthlyController extends Controller
     public function copy(Request $request)
     {
         try {
+            if(now() > Carbon::parse($request->tomonth)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->addDay(5)->subSecond(1)){
+                return ResponseFormatter::error(null, 'Tidak bisa menduplikat monthly '. Carbon::parse($request->tomonth)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->format('M').' sudah lebih dari '. Carbon::parse($request->tomonth)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->addDay(5)->subSecond(1)->format('d M Y'));
+            }
             $monthlys = Monthly::where('date', date('y-m-d',strtotime($request->frommonth)))
                 ->where('user_id', Auth::id())
                 ->where('is_update', 0)

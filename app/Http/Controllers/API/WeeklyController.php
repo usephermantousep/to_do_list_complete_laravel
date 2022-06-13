@@ -36,11 +36,25 @@ class WeeklyController extends Controller
     {
         try {
             $data = $request->all();
-            $monday = ConvertDate::getMondayOrSaturday($data['year'], $data['week'], true);
-            if (Auth::user()->area_id == 2 && now() > $monday->addDay(1)->addHour(10)) {
-                return ResponseFormatter::error(null, 'Tidak bisa menambahkan weekly di week ' . $request->week . ' sudah lebih dari hari selasa jam 10:00');
-            } else if (Auth::user()->area_id =! 2 && now() > $monday->addHour(17)) {
-                return ResponseFormatter::error(null, 'Tidak bisa menambahkan weekly di week ' . $request->week . ' sudah lebih dari hari senin jam 17:00');
+            if ($request->is_add) {
+                $data['is_add'] = 1;
+                $monday = ConvertDate::getMondayOrSaturday($data['year'], $data['week'], true)->addHour(7);
+                if (auth()->user()->area_id == 2 && now()->addHour(7) > $monday->addDay(8)->addHour(10)) {
+                    return ResponseFormatter::error(null, 'Tidak bisa menambahkan extra task weekly di week ' . $request->week. ' sudah lebih dari hari selasa jam 10:00');
+                }
+                if (auth()->user()->area_id != 2 && now()->addHour(7) > $monday->addDay(7)->addHour(10)) {
+                    return ResponseFormatter::error(null, 'Tidak bisa menambahkan extra task weekly di week ' . $request->week. ' sudah lebih dari hari senin jam 10:00');
+                }
+            } else {
+                $monday = ConvertDate::getMondayOrSaturday($data['year'], $data['week'], true);
+                if (Auth::user()->area_id == 2 && now() > $monday->addDay(1)->addHour(10)) {
+                    return ResponseFormatter::error(null, 'Tidak bisa menambahkan weekly di week ' . $request->week . ' sudah lebih dari hari selasa jam 10:00');
+                }
+
+                $monday2 = ConvertDate::getMondayOrSaturday($data['year'], $data['week'], true);
+                if (Auth::user()->area_id != 2 && now() > $monday2->addHour(17)) {
+                    return ResponseFormatter::error(null, 'Tidak bisa menambahkan weekly di week ' . $request->week . ' sudah lebih dari hari senin jam 17:00');
+                }
             }
             $data['user_id'] = Auth::id();
             Weekly::create($data);
@@ -55,7 +69,7 @@ class WeeklyController extends Controller
         try {
             $weekly = Weekly::findOrfail($request->id);
 
-            $requesteds = ModelsRequest::where('user_id', Auth::id())->get();
+            $requesteds = ModelsRequest::where('user_id', Auth::id())->where('jenistodo', 'Weekly')->get();
             foreach ($requesteds as $requested) {
                 $idTaskExistings = explode(',', $requested->todo_request);
                 foreach ($idTaskExistings as $idTaskExisting) {
@@ -75,11 +89,18 @@ class WeeklyController extends Controller
 
             if (Auth::user()->area_id == 2 && now() > $monday->addDay(8)->addHour(10)) {
                 return ResponseFormatter::error(null, 'Tidak bisa merubah status weekly sudah lebih dari hari selasa jam 10:00');
-            } else if (Auth::user()->area_id != 2 && now() > $monday->addDay(7)->addHour(17)) {
+            }
+
+            $monday2 = ConvertDate::getMondayOrSaturday($weekly->year, $weekly->week, true);
+            if (Auth::user()->area_id != 2 && now() > $monday2->addDay(7)->addHour(17)) {
                 return ResponseFormatter::error(null, 'Tidak bisa merubah status weekly sudah lebih dari hari senin jam 17:00');
             }
 
-            if ($request->value != null && $request->value) {
+            if (now()->year <= $weekly->year && now()->weekOfYear < $weekly->week) {
+                return ResponseFormatter::error(null, "Tidak bisa merubah status weekly lebih dari week " . now()->weekOfYear);
+            }
+
+            if ($weekly->tipe == 'RESULT') {
                 $weekly['value_actual'] = $request->value;
                 $weekly['status_result'] = true;
                 $weekly['value'] = $weekly['value_actual'] / $weekly['value_plan'] > 1.2 ? 1.2 : $weekly['value_actual'] / $weekly['value_plan'];
@@ -118,10 +139,12 @@ class WeeklyController extends Controller
             $monday = ConvertDate::getMondayOrSaturday($weekly->year, $weekly->week, true);
             if (Auth::user()->area_id == 2 && now() > $monday->addDay(1)->addHour(10)) {
                 return ResponseFormatter::error(null, 'Tidak bisa menghapus weekly sudah lebih dari hari selasa jam 10:00');
-            } else if (Auth::user()->area_id != 2 && now() > $monday->addHour(17)) {
+            }
+            $monday2 = ConvertDate::getMondayOrSaturday($weekly->year, $weekly->week, true);
+            if (Auth::user()->area_id != 2 && now() > $monday2->addHour(17)) {
                 return ResponseFormatter::error(null, 'Tidak bisa menghapus weekly sudah lebih dari hari senin jam 17:00');
             }
-            $weekly->forceDelete();
+            $weekly->delete();
             return ResponseFormatter::success(null, 'Berhasil menghapus weekly');
         } catch (Exception $e) {
             return ResponseFormatter::error(null, $e->getMessage());
@@ -171,9 +194,9 @@ class WeeklyController extends Controller
             $monday = ConvertDate::getMondayOrSaturday($request->toyear, $request->toweek, true);
 
             if (Auth::user()->area_id == 2 && now() > $monday->addDay(1)->addHour(10)) {
-                return ResponseFormatter::error(null, 'Tidak bisa menduplikat weekly sudah lebih dari hari selasa jam 10:00');
+                return ResponseFormatter::error(null, 'Tidak bisa menduplikat weekly ' . $request->toweek . ' sudah lebih dari week ' . now()->weekOfYear . ' hari selasa jam 10:00');
             } else if (Auth::user()->area_id != 2 && now() > $monday->addHour(17)) {
-                return ResponseFormatter::error(null, 'Tidak bisa menduplikat weekly sudah lebih dari hari senin jam 17:00');
+                return ResponseFormatter::error(null, 'Tidak bisa menduplikat weekly ' . $request->toweek . ' sudah lebih dari week ' . now()->weekOfYear . ' hari senin jam 17:00');
             }
             $weeklys = Weekly::where('week', $request->fromweek)
                 ->where('year', $request->fromyear)

@@ -20,8 +20,8 @@ class CreateWeekliesTable extends Migration
             $table->integer('week');
             $table->integer('year');
             $table->string('tipe');
-            $table->integer('value_plan')->nullable();
-            $table->integer('value_actual')->nullable();
+            $table->bigInteger('value_plan')->nullable()->change();
+            $table->bigInteger('value_actual')->nullable()->change();
             $table->boolean('status_non')->nullable();
             $table->boolean('status_result')->nullable();
             $table->double('value')->default(0);

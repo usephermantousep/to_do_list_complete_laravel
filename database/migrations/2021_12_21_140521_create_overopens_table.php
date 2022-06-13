@@ -16,12 +16,14 @@ class CreateOveropensTable extends Migration
         Schema::create('overopens', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id');
+            $table->foreignId('atasan')->nullable();
             $table->integer('week');
             $table->integer('year');
-            $table->integer('daily')->default(0);
-            $table->integer('weekly')->default(0);
-            $table->integer('monthly')->default(0);
+            $table->integer('daily')->nullable();
+            $table->integer('weekly')->nullable();
+            $table->integer('monthly')->nullable();
             $table->integer('point');
+            $table->string('keterangan')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

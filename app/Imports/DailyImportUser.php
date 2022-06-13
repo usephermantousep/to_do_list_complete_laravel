@@ -5,7 +5,6 @@ namespace App\Imports;
 use App\Models\Daily;
 use Carbon\Carbon;
 use Exception;
-use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
@@ -25,7 +24,7 @@ class DailyImportUser implements ToModel, WithHeadingRow
      */
     public function model(array $row)
     {
-        if (strlen((string) $row['date']) < 6) {
+        if (strlen((string) preg_replace('/\s+/', '', $row['date'])) < 6) {
             throw new Exception("Tidak bisa import daily ada format import yang salah pastikan pada bagian tanggal format kolom date menggunakan text dan format tanggal yyyy-mm-dd");
         }
 
@@ -33,14 +32,18 @@ class DailyImportUser implements ToModel, WithHeadingRow
             throw new Exception("Tidak bisa import daily ada format import yang salah pastikan pada bagian jam format kolom time menggunakan text dan format 24 jam contoh 15:00");
         }
 
-        if (Auth::user()->area_id == 2) {
-            if ((now()->weekOfYear == Carbon::parse($row['date'])->weekOfYear || Carbon::parse($row['date'])->weekOfYear < now()->weekOfYear) && now() > now()->startOfDay()->startOfWeek()->addDay(1)->addHour(10)) {
-                throw new Exception("Tidak bisa import daily pastikan tanggal tidak ada yang melibihi date selasa jam 10:00 di minggu yang sedang berjalan");
+        if (auth()->user()->role_id != 1) {
+            if (auth()->user()->area_id == 2) {
+                if (Carbon::parse($row['date'])->weekOfYear <= now()->weekOfYear && now() > now()->startOfDay()->startOfWeek()->addDay(1)->addHour(10)) {
+                    throw new Exception("Tidak bisa import daily pada week ke " . Carbon::parse($row['date'])->weekOfYear . " sudah melibihi hari selasa tanggal " . now()->startOfDay()->startOfWeek()->addDay(1)->addHour(10)->format('d M y') . " jam 10:00");
+                }
+            } else if (Carbon::parse($row['date'])->weekOfYear <= now()->weekOfYear && now() > now()->startOfDay()->startOfWeek()->addHour(17)) {
+                throw new Exception("Tidak bisa import daily pada week ke ". Carbon::parse($row['date'])->weekOfYear." sudah melibihi hari senin tanggal " . now()->startOfDay()->startOfWeek()->addHour(17)->format('d M y') . " jam 17:00");
             }
-        } else {
-            if ((now()->weekOfYear == Carbon::parse($row['date'])->weekOfYear || Carbon::parse($row['date'])->weekOfYear < now()->weekOfYear) && now() > now()->startOfDay()->startOfWeek()->addHour(17)) {
-                throw new Exception("Tidak bisa import daily pastikan tanggal tidak ada yang melibihi date senin jam 17:00 di minggu yang sedang berjalan");
-            }
+        }
+
+        if (Carbon::parse($row['date'])->weekOfYear < now()->weekOfYear) {
+            throw new Exception("Tidak bisa import daily kurang dari week " . now()->weekOfYear);
         }
         return new Daily([
             'user_id' => $this->userId,

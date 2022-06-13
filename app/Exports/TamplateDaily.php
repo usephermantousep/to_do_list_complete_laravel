@@ -2,22 +2,22 @@
 
 namespace App\Exports;
 
+use App\Helpers\ConvertDate;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class TamplateDaily implements WithHeadings,FromCollection,WithColumnFormatting
+class TamplateDaily implements WithHeadings, FromCollection
 {
     use Exportable;
     public function collection()
     {
+        $monday = ConvertDate::getMondayOrSaturday(now()->year, now()->weekOfYear, true);
         return collect([
             [
-                'date' => '2022-12-31',
-                'task' => 'contoh task',
-                'time' => '15:00'
+                'date' => $monday->format('Y-m-d'),
+                'task' => 'contoh task daily',
+                'time' => '08:00'
             ],
         ]);
     }
@@ -30,11 +30,12 @@ class TamplateDaily implements WithHeadings,FromCollection,WithColumnFormatting
         ];
     }
 
-    public function columnFormats(): array
-    {
-        return [
-            'A' => NumberFormat::FORMAT_DATE_YYYYMMDD,
-            'C' => NumberFormat::FORMAT_DATE_TIME3,
-        ];
-    }
+    // public function columnFormats(): array
+    // {
+    //     return [
+    //         'A' => DataType::TYPE_STRING,
+    //         'B' => DataType::TYPE_STRING,
+    //         'C' => DataType::TYPE_STRING,
+    //     ];
+    // }
 }

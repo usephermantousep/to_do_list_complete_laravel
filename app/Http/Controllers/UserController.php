@@ -26,7 +26,7 @@ class UserController extends Controller
         return view('user.index')
             ->with(
                 [
-                    'users' => User::with(['area', 'role', 'divisi', 'approval'])->withTrashed()->filter()->simplePaginate(100),
+                    'users' => User::with(['area', 'role', 'divisi', 'approval'])->orderBy('nama_lengkap')->withTrashed()->filter()->simplePaginate(100),
                     'title' => 'User',
                     'active' => 'user',
                     'approvals' => User::whereIn('role_id', [3, 4, 5, 6])->get(),
@@ -184,14 +184,14 @@ class UserController extends Controller
 
     public function getdivisi(Request $request, $id)
     {
-        $divisi = Divisi::where('area_id', $id)->get();
+        $divisi = Divisi::where('area_id', $id)->orderBy('name')->get();
         return response()->json($divisi);
     }
 
     public function getapproval(Request $request)
     {
         $approval = User::where('role_id', 6)->where('area_id', $request->areaid)
-            ->orWhereIn('role_id', [3, 4, 5])->where('divisi_id', $request->divisiid)->get();
+            ->orWhereIn('role_id', [3, 4, 5])->where('divisi_id', $request->divisiid)->orderBy('nama_lengkap')->get();
         return response()->json($approval);
     }
 
@@ -207,11 +207,16 @@ class UserController extends Controller
 
     public function import(Request $request)
     {
-        $file = $request->file('file');
-        $namaFile = $file->getClientOriginalName();
-        $file->move(public_path('import'), $namaFile);
+        try {
+            $file = $request->file('file');
+            $namaFile = $file->getClientOriginalName();
+            $file->move(public_path('import'), $namaFile);
 
-        Excel::import(new UsersImport, public_path('/import/' . $namaFile));
-        return redirect('user')->with(['success' => 'berhasil import user']);
+            Excel::import(new UsersImport, public_path('/import/' . $namaFile));
+            return redirect('user')->with(['success' => 'berhasil import user']);
+        } catch (Exception $e) {
+            return redirect('user')->with(['error' => $e->getMessage()]);
+        }
+
     }
 }

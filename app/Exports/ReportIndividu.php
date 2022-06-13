@@ -16,91 +16,164 @@ class ReportIndividu implements FromArray, WithHeadings, WithMapping
 {
     protected int $week;
     protected int $year;
+    protected int $divisi_id;
 
-    function __construct(int $week,int $year)
+    function __construct(int $week, int $year, int $divisi_id)
     {
         $this->week = $week;
         $this->year = $year;
+        $this->divisi_id = $divisi_id;
     }
     use Exportable;
     public function array(): array
     {
-        $users = User::orderBy('nama_lengkap')->get()->except(1);
+        $users = User::orderBy('nama_lengkap')->where('divisi_id', $this->divisi_id)->get();
+        // $users = User::where('id', 1165)->get();
         $report = array();
 
         foreach ($users as $user) {
+            ##SETUP VARIABLE
+            //DAILY
+            $onTimePoint = 0;
+            $dailyPoint = 0;
+            $dailyOntime = 0;
             $dailysLength = [];
+            $actTarget = [];
+            $dpoint = [];
+            //WEEKLY
+            $weeklyValue = 0;
+            $kpiWeekly = 0;
+            $totalTaskWeekly = 0;
+            $closedTaskWeekly = 0;
             for ($i = 0; $i < 7; $i++) {
-                $monday = ConvertDate::getMondayOrSaturday($this->year,$this->week,true);
-                $i == 0 ?
-                    $daily = Daily::where('date', $monday)->where('user_id', $user->id)->orderBy('time')->get() :
-                    $daily = Daily::where('date', $monday->addDay($i))->where('user_id', $user->id)->orderBy('time')->get();
+                $dailyClose = 0;
+                if ($i == 0) {
+                    $monday = ConvertDate::getMondayOrSaturday($this->year, $this->week, true);
+                    $daily = Daily::where('date', $monday)->where('user_id', $user->id)->orderBy('time')->get();
+                    if (count($daily) > 0) {
+                        $dailyClose = count($daily->where('status', 1));
+                        if ($dailyClose > 0) {
+                            if ($dailyClose / count($daily->where('status', 1)) < 1) {
+                                $dpoint[$monday->format('D')] = 1 - ($dailyClose / count($daily->where('status', 1)));
+                            } else {
+                                $dpoint[$monday->format('D')] = 0;
+                            }
+                        } else {
+                            $dpoint[$monday->format('D')] = 1;
+                        }
+                    } else {
+                        $dpoint[$monday->format('D')] = 0;
+                    }
+                    $actTarget[$monday->format('D')] = '';
+                    if ($dailyClose < 10) {
+                        $actTarget[$monday->format('D')] = '0' . $dailyClose;
+                    } else {
+                        $actTarget[$monday->format('D')] = $dailyClose;
+                    }
+                    $actTarget[$monday->format('D')] = $actTarget[$monday->format('D')] . '/';
+                    if (count($daily->where('isplan', 1)) < 10) {
+                        $actTarget[$monday->format('D')] = $actTarget[$monday->format('D')] . '0' . count($daily->where('isplan', 1));
+                    } else {
+                        $actTarget[$monday->format('D')] = $actTarget[$monday->format('D')] . count($daily->where('isplan', 1));
+                    }
+                } else {
+                    $monday1 = ConvertDate::getMondayOrSaturday($this->year, $this->week, true)->addDay($i);
+                    $daily = Daily::where('date', $monday1)->where('user_id', $user->id)->orderBy('time')->get();
+                    if (count($daily) > 0) {
+                        $dailyClose = count($daily->where('status', 1));
+                        if ($dailyClose > 0) {
+                            if ($dailyClose / count($daily->where('status', 1)) < 1) {
+                                $dpoint[$monday1->format('D')] = 1 - ($dailyClose / count($daily->where('status', 1)));
+                            } else {
+                                $dpoint[$monday1->format('D')] = 0;
+                            }
+                        } else {
+                            $dpoint[$monday1->format('D')] = 1;
+                        }
+                    } else {
+                        $dpoint[$monday1->format('D')] = 0;
+                    }
+                    $actTarget[$monday1->format('D')] = '';
+                    if ($dailyClose < 10) {
+                        $actTarget[$monday1->format('D')] = '0' . $dailyClose;
+                    } else {
+                        $actTarget[$monday1->format('D')] = $dailyClose;
+                    }
+                    $actTarget[$monday1->format('D')] = $actTarget[$monday1->format('D')] . '/';
+                    if (count($daily->where('isplan', 1)) < 10) {
+                        $actTarget[$monday1->format('D')] = $actTarget[$monday1->format('D')] . '0' . count($daily->where('isplan', 1));
+                    } else {
+                        $actTarget[$monday1->format('D')] = $actTarget[$monday1->format('D')] . count($daily->where('isplan', 1));
+                    }
+                }
 
                 if (count($daily) > 0) {
                     array_push($dailysLength, $daily);
                 }
             }
-            $monday = ConvertDate::getMondayOrSaturday($this->year, $this->week, true);
-            $dailys = Daily::whereBetween('date', [$monday->format('y-m-d'), $monday->addDay(6)->format('y-m-d')])->where('user_id', $user->id)->get();
             ##DAILYPOINT
-            $dailyDone = count($dailys->where('status', 1));
-            $dailySubmit = count($dailysLength);
-            $dailyTaskPlanTotal = count($dailys->where('isplan', 1));
-            $onTimePoint = 0;
-            foreach ($dailys as $singleDaily) {
-                $onTimePoint += $singleDaily->ontime;
+            $dailyDone = 0;
+            $dailyTaskPlanTotal = 0;
+            foreach ($dailysLength as $dailys) {
+                foreach ($dailys as $d) {
+                    if ($d->status) {
+                        $dailyDone++;
+                    }
+                    if ($d->isplan) {
+                        $dailyTaskPlanTotal++;
+                    }
+                    $onTimePoint += $d->ontime;
+                }
             }
-            $dailyPoint = 0;
-            $dailyOntime = 0;
+            $dailySubmit = count($dailysLength);
             #SUMMARY DAILY
             if ($dailyDone) {
-                $dailyPoint += (($dailySubmit / 6) * ($dailyDone / $dailyTaskPlanTotal) * 40) > 40 ? 40 : (($dailySubmit / 6) * ($dailyDone / $dailyTaskPlanTotal) * 40);
-                $dailyOntime += (($onTimePoint / $dailyTaskPlanTotal) * 20) > 20 ? 20 : ($onTimePoint / $dailyTaskPlanTotal) * 20;
+                if (!$user->wr && !$user->wn) {
+                    if ($dailyTaskPlanTotal) {
+                        $dailyPoint = ($dailySubmit / 6) * ($dailyDone / $dailyTaskPlanTotal) > 1 ? 80 : (($dailySubmit / 6) * ($dailyDone / $dailyTaskPlanTotal)) * 80;
+                    }
+                } else {
+                    if ($dailyTaskPlanTotal) {
+                        $dailyPoint = ($dailySubmit / 6) * ($dailyDone / $dailyTaskPlanTotal) > 1 ? 40 : (($dailySubmit / 6) * ($dailyDone / $dailyTaskPlanTotal)) * 40;
+                    }
+                }
+                if ($dailyTaskPlanTotal) {
+                    $dailyOntime = ($dailySubmit / 6) * ($onTimePoint / $dailyTaskPlanTotal) > 1 ? 20 : (($dailySubmit / 6) * ($onTimePoint / $dailyTaskPlanTotal)) * 20;
+                }
             }
             ##DAILYONTIME
-            $kpiDaily = $dailyPoint + $dailyOntime;
+            $kpiDaily = $dailyPoint;
+            $kpiDailyOntime = $dailyOntime;
 
-            ##WEEKLY
-            $weeklys = Weekly::where('year', $this->year)->where('week', $this->week)->where('user_id', $user->id)->get();
-            $totalTaskWeekly = count($weeklys);
-            $weeklyValue = 0;
-            foreach ($weeklys as $weekly) {
-                $weeklyValue += $weekly->value;
-            }
-            $kpiWeekly = 0;
-            if ($weeklyValue) {
-                $kpiWeekly = ($weeklyValue / $totalTaskWeekly) > 1 ? 40 : ($weeklyValue / $totalTaskWeekly) * 40;
-            }
-
-
-            ##MONTHLY
-            $mondayMonth = ConvertDate::getMondayOrSaturday($this->year, $this->week, true);
-            $sundayMonth = ConvertDate::getMondayOrSaturday($this->year, $this->week, false);
-            $endOfMonth = ConvertDate::getEndOfMonth(now()->year, now()->weekOfYear);
-            $kpiMonthly = 0;
-            if (($mondayMonth->month == $sundayMonth->month && $sundayMonth->diffInDays($endOfMonth) < 3) || ($mondayMonth->month != $sundayMonth->month && $mondayMonth->endOfMonth()->diffInDays($sundayMonth) < 4)) {
-                $monthlys = Monthly::whereDate('date', $mondayMonth->startOfMonth())->where('user_id', $user->id)->get();
-                $totalTaskmonthly = count($monthlys);
-                $monthlyValue = 0;
-                foreach ($monthlys as $monthly) {
-                    $monthlyValue += $monthly->value;
+            if ($user->wr || $user->wn) {
+                ##WEEKLY
+                $weeklys = Weekly::where('year', $this->year)->where('week', $this->week)->where('user_id', $user->id)->get();
+                $totalTaskWeekly = count($weeklys);
+                foreach ($weeklys as $weekly) {
+                    if ($weekly->value) {
+                        $weeklyValue += $weekly->value;
+                        $closedTaskWeekly++;
+                    }
                 }
-                if ($monthlyValue) {
-                    $kpiMonthly += ($monthlyValue / $totalTaskmonthly) > 1 ? 20 : ($monthlyValue / $totalTaskmonthly) * 20;
+                if ($weeklyValue) {
+                    $kpiWeekly = ($weeklyValue / $totalTaskWeekly) > 1 ? 40 : ($weeklyValue / $totalTaskWeekly) * 40;
                 }
             }
-            $totalKpi = $kpiDaily + $kpiWeekly;
-            if (($user->mn || $user->mr) && $kpiMonthly != 0) {
-                $totalKpi = ($totalKpi * 0.8) + $kpiMonthly;
-            }
+            $totalKpi = $kpiDaily + $kpiWeekly + $kpiDailyOntime;
+            $closedTaskWeekly = $closedTaskWeekly < 10 ? '0' . $closedTaskWeekly : $closedTaskWeekly;
+            $totalTaskWeekly = $totalTaskWeekly < 10 ? '0' . $totalTaskWeekly : $totalTaskWeekly;
             array_push($report, [
                 'user' => $user,
                 'daily' => $kpiDaily,
+                'ontime_point' => $kpiDailyOntime,
                 'weekly' => $kpiWeekly,
-                'monthly' => $kpiMonthly,
                 'total' => $totalKpi,
+                'act' => $actTarget,
+                'actw' => $closedTaskWeekly . '/' . $totalTaskWeekly,
+                'dpoint' => $dpoint,
             ]);
         }
+        // dd($report);
         return $report;
     }
 
@@ -110,9 +183,17 @@ class ReportIndividu implements FromArray, WithHeadings, WithMapping
             'Nama',
             'Dept',
             'Divisi',
+            'Senin',
+            'Selasa',
+            'Rabu',
+            'Kamis',
+            'Jumat',
+            'Sabtu',
+            'Minggu',
+            'Weekly Actual',
             'Daily',
+            'Ontime Point',
             'Weekly',
-            'Monthly',
             'Total Point',
         ];
     }
@@ -123,10 +204,18 @@ class ReportIndividu implements FromArray, WithHeadings, WithMapping
             $row['user']->nama_lengkap,
             $row['user']->area->name,
             $row['user']->divisi->name,
-            number_format($row['daily'], 1, ',', ' '),
-            number_format($row['weekly'], 1, ',', ' '),
-            number_format($row['monthly'], 1, ',', ' '),
-            number_format($row['total'], 1, ',', ' ')
+            $row['act']['Mon'],
+            $row['act']['Tue'],
+            $row['act']['Wed'],
+            $row['act']['Thu'],
+            $row['act']['Fri'],
+            $row['act']['Sat'],
+            $row['act']['Sun'],
+            $row['actw'],
+            round($row['daily'], 2) ?? '0',
+            round($row['ontime_point'], 2) ?? '0',
+            round($row['weekly'], 2) ?? '0',
+            round($row['total'], 2) ?? '0',
         ];
     }
 }

@@ -37,12 +37,12 @@ class ResultController extends Controller
             $weekly = Weekly::where('week', $week)->where('year', $year)->where('user_id', $user->id)->get();
 
             $monday = ConvertDate::getMondayOrSaturday($year, $week, true);
-            $sunday = ConvertDate::getMondayOrSaturday($year, $week, false);
-            $endOfMonth = ConvertDate::getEndOfMonth($year, $week);
+            // $sunday = ConvertDate::getMondayOrSaturday($year, $week, false);
+            // $endOfMonth = ConvertDate::getEndOfMonth($year, $week);
 
-            if (($monday->month == $sunday->month && $sunday->diffInDays($endOfMonth) < 3) || ($monday->month != $sunday->month && $monday->endOfMonth()->diffInDays($sunday) < 4)) {
-                $monthly = Monthly::whereDate('date', $monday->startOfMonth())->where('user_id', $user->id)->get();
-            }
+            // if (($monday->month == $sunday->month && $sunday->diffInDays($endOfMonth) < 3) || ($monday->month != $sunday->month && $monday->endOfMonth()->diffInDays($sunday) < 4)) {
+            $monthly = Monthly::whereDate('date', $monday->startOfMonth())->where('user_id', $user->id)->get();
+            // }
 
             //RESPONSE
             return ResponseFormatter::success([
@@ -55,7 +55,7 @@ class ResultController extends Controller
         }
     }
 
-    public function resultbyuser(Request $request,$id)
+    public function resultbyuser(Request $request, $id)
     {
         try {
             $week = $request->week;
@@ -77,12 +77,12 @@ class ResultController extends Controller
             $weekly = Weekly::where('week', $week)->where('year', $year)->where('user_id', $id)->get();
 
             $monday = ConvertDate::getMondayOrSaturday($year, $week, true);
-            $sunday = ConvertDate::getMondayOrSaturday($year, $week, false);
-            $endOfMonth = ConvertDate::getEndOfMonth($year, $week);
+            // $sunday = ConvertDate::getMondayOrSaturday($year, $week, false);
+            // $endOfMonth = ConvertDate::getEndOfMonth($year, $week);
 
-            if (($monday->month == $sunday->month && $sunday->diffInDays($endOfMonth) < 3) || ($monday->month != $sunday->month && $monday->endOfMonth()->diffInDays($sunday) < 4)) {
-                $monthly = Monthly::whereDate('date', $monday->startOfMonth())->where('user_id', $id)->get();
-            }
+            // if (($monday->month == $sunday->month && $sunday->diffInDays($endOfMonth) < 3) || ($monday->month != $sunday->month && $monday->endOfMonth()->diffInDays($sunday) < 4)) {
+            $monthly = Monthly::whereDate('date', $monday->startOfMonth())->where('user_id', $id)->get();
+            // }
 
             //RESPONSE
             return ResponseFormatter::success([

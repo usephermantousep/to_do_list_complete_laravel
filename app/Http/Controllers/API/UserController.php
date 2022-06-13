@@ -77,7 +77,7 @@ class UserController extends Controller
     public function tag(Request $request)
     {
         try {
-            $user = User::with('area', 'role', 'divisi')->where('role_id', '<=', Auth::user()->role_id)->get()->except([Auth::id(), 1]);
+            $user = User::with('area', 'role', 'divisi')->where('role_id', '<=', Auth::user()->role_id)->orderBy('nama_lengkap')->get()->except([Auth::id(), 1]);
             return ResponseFormatter::success($user, 'berhasil');
         } catch (Exception $e) {
             return ResponseFormatter::error(null, $e->getMessage());
@@ -107,7 +107,21 @@ class UserController extends Controller
     public function team(Request $request)
     {
         try {
-            $user = User::with('area', 'role', 'divisi')->where('divisi_id', Auth::user()->divisi_id)->orderBy('nama_lengkap')->get()->except([Auth::id(), 1]);
+            switch (Auth::id()) {
+                case 2:
+                    $user = User::with('area', 'role', 'divisi')->where('area_id', Auth::user()->area_id)->orderBy('nama_lengkap')->get()->except([Auth::id()]);
+                    break;
+                case 1320:
+                    $user = User::with('area', 'role', 'divisi')->where('divisi_id', Auth::user()->divisi_id)->orWhere('divisi_id', 13)->orderBy('nama_lengkap')->get()->except([Auth::id()]);
+                    break;
+                case 1341:
+                    $user = User::with('area', 'role', 'divisi')->where('divisi_id', 14)->orWhere('divisi_id', 15)->orderBy('nama_lengkap')->get();
+                    break;
+                default:
+                    $user = User::with('area', 'role', 'divisi')->where('divisi_id', Auth::user()->divisi_id)->orderBy('nama_lengkap')->get()->except([Auth::id(), 1]);
+                    break;
+            }
+
             return ResponseFormatter::success($user, 'berhasil');
         } catch (Exception $e) {
             return ResponseFormatter::error(null, $e->getMessage());

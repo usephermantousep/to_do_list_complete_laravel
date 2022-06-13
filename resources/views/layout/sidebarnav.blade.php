@@ -57,8 +57,12 @@
                              <p>Report</p>
                          </a>
                      </li>
-                 @endif
-                 @if (auth()->user()->role_id == 1)
+                     <li class="nav-item">
+                         <a href='/admin/overopen' class="nav-link {{ $active === 'overopen' ? 'active' : '' }}">
+                             <i class="nav-icon fas fa-file-invoice"></i>
+                             <p>Cut Point</p>
+                         </a>
+                     </li>
                      <li class="nav-item">
                          <a href="#" class="nav-link {{ $active === 'setting' ? 'active' : '' }}">
                              <i class="nav-icon fas fa-cogs"></i>
@@ -87,6 +91,27 @@
                                  </a>
                              </li>
                          </ul>
+                     </li>
+                 @else
+                     <li class="nav-item">
+                         <a href='/result/' class="nav-link {{ $active === 'result' ? 'active' : '' }}">
+                             <i class="nav-icon fas fa-poll"></i>
+                             <p>Result</p>
+                         </a>
+                     </li>
+                     <li class="nav-item">
+                         <a href='/request/' class="nav-link {{ $active === 'request' ? 'active' : '' }}">
+                             <i class="nav-icon fas fa-undo"></i>
+                             <p>Change Task</p>
+                         </a>
+                     </li>
+                 @endif
+                 @if (auth()->user()->role_id > 2 || auth()->user()->role_id == 1)
+                     <li class="nav-item">
+                         <a href='/req/' class="nav-link {{ $active === 'req' ? 'active' : '' }}">
+                             <i class="nav-icon fas fa-check"></i>
+                             <p>Approval</p>
+                         </a>
                      </li>
                  @endif
              </ul>

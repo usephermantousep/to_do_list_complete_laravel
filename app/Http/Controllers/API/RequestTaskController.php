@@ -33,7 +33,6 @@ class RequestTaskController extends Controller
                 'approvedBy.divisi',
                 'approvedBy.area'
             )->where('user_id', Auth::id())
-                ->withTrashed()
                 ->orderBy('created_at', 'DESC')
                 ->get();
 
@@ -312,8 +311,8 @@ class RequestTaskController extends Controller
                     $idTaskExistings = explode(',', $requested->todo_request);
                     foreach ($idTaskExistings as $idTaskExisting) {
                         $dailyExisting = Daily::find($idTaskExisting);
-                        if (now() > Carbon::parse($dailyExisting->date / 1000)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->addDay(1)->endOfDay()) {
-                            return ResponseFormatter::error(null, 'Tidak bisa approved task yang lebih dari 1 Hari, Task request tanggal ' . Carbon::parse($dailyExisting->date / 1000)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->format('d M Y'));
+                        if (now() > Carbon::parse($dailyExisting->date / 1000)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->startOfWeek()->addWeek(1)->addHour(10)) {
+                            return ResponseFormatter::error(null, 'Tidak bisa approved task yang lebih Task request tanggal ' . Carbon::parse($dailyExisting->date / 1000)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->format('d M Y'));
                         }
                         $dailyExisting->delete();
                     }
@@ -333,7 +332,7 @@ class RequestTaskController extends Controller
                     $idTaskExistings = explode(',', $requested->todo_request);
                     foreach ($idTaskExistings as $idTaskExisting) {
                         $dailyExisting = Weekly::find($idTaskExisting);
-                        if (now()->weekOfYear != $dailyExisting->week) {
+                        if (now()->weekOfYear > $dailyExisting->week) {
                             return ResponseFormatter::error(null, 'Tidak bisa approved task yang lebih dari 1 week, Task request week ' . $dailyExisting->week);
                         }
                         $dailyExisting->delete();
@@ -345,7 +344,7 @@ class RequestTaskController extends Controller
                     $idTaskExistings = explode(',', $requested->todo_request);
                     foreach ($idTaskExistings as $idTaskExisting) {
                         $dailyExisting = Monthly::find($idTaskExisting);
-                        if (now()->startOfMonth() > Carbon::parse($idTaskExisting['date'])->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))) {
+                        if (now() > Carbon::parse($idTaskExisting['date'])->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->addMonth(1)->addDay(4)) {
                             return ResponseFormatter::error(null, 'Tidak bisa approved task yang lebih dari 1 bulan, Task request bulan ' . Carbon::parse($idTaskExisting['date'])->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta')));
                         }
                         $dailyExisting->delete();
@@ -356,7 +355,7 @@ class RequestTaskController extends Controller
             $requested->approved_by = Auth::id();
             $requested->approved_at = now();
             $requested->save();
-            if ($requested->user->approval->id_notif) {
+            if ($requested->user->id_notif) {
                 SendNotif::sendMessage('Request task ' . $requested->jenistodo . ' sudah di setujui oleh ' . Auth::user()->nama_lengkap, array($requested->user->approval->id_notif));
             }
             return ResponseFormatter::success(null, 'Berhasil menyetujui request');
@@ -395,7 +394,7 @@ class RequestTaskController extends Controller
             $requested->approved_by = Auth::id();
             $requested->approved_at = now();
             $requested->save();
-            if ($requested->user->approval->id_notif) {
+            if ($requested->user->id_notif) {
                 SendNotif::sendMessage('Request task ' . $requested->jenistodo . ' di tolak oleh ' . Auth::user()->nama_lengkap, array($requested->user->id_notif));
             }
             return ResponseFormatter::success(null, 'Berhasil menolak request');
