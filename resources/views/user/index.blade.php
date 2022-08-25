@@ -19,7 +19,7 @@
                                             IMPORT</button>
                                     </a>
                                     <a href="#"><button class="badge bg-success mx-3 elevation-0" data-toggle="modal"
-                                            data-target="#imporUser">IMPORT</button>
+                                            data-target="#imporUser">IMPORT</button></a>
                                         <a href="/user/create"><button class="badge bg-success mx-3 elevation-0">+
                                                 ADD</button>
                                         </a>

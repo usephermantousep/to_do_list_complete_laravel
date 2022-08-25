@@ -183,16 +183,17 @@ class DailyController extends Controller
                 return ResponseFormatter::error(null, "Tidak bisa menghapus tag daily, tag daily hanya bisa di hapus oleh pembuatan tag");
             }
 
-            // if (!$daily->isplan) {
-            //     return ResponseFormatter::error(null, "Extra task tidak bisa di hapus");
-            // }
-            if (Carbon::parse($daily->date / 1000)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->weekOfYear <= now()->weekOfYear && !$daily->tag_id) {
+            if (!$daily->isplan && now() > Carbon::parse($daily->date / 1000)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->addDay(2)) {
+                return ResponseFormatter::error(null, "Extra task tidak bisa di hapus lebih dari H+2");
+            }
+            if ($daily->isplan && Carbon::parse($daily->date / 1000)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->weekOfYear <= now()->weekOfYear && !$daily->tag_id) {
                 if (Auth::user()->area_id == 2 && now() > Carbon::parse($daily->date / 1000)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->startOfWeek()->addDay(1)->addHour(10)) {
                     return ResponseFormatter::error(null, "Tidak bisa menghapus daily di week yang sudah berjalan dan lebih dari selasa jam 10.00");
                 } else if (Auth::user()->area_id != 2 && now() > Carbon::parse($daily->date / 1000)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->startOfWeek()->addHour(17)) {
                     return ResponseFormatter::error(null, "Tidak bisa menghapus daily di week yang sudah berjalan dan lebih dari senin jam 17.00");
                 }
             }
+
             $deletes = Daily::where('task', $daily->task)->where('tag_id', Auth::id())->whereDate('date', date('y-m-d', $daily->date / 1000))->get();
             if ($deletes) {
                 foreach ($deletes as $delete) {
@@ -294,7 +295,7 @@ class DailyController extends Controller
                     ->where('tag_id', Auth::id())
                     ->get()
                     ->toArray();
-                if ($taged) {
+                if ($taged && auth()->id() != 2) {
                     foreach ($taged as $tag) {
                         $user = User::find($tag['user_id']);
                         if ($user) {

@@ -19,8 +19,8 @@ class Overopen extends Model
         return $this->belongsTo(User::class)->withTrashed();
     }
 
-    public function atasan()
+    public function leader()
     {
-        return $this->belongsTo(User::class,'atasan')->withTrashed();
+        return $this->belongsTo(User::class,'atasan','id')->withTrashed();
     }
 }

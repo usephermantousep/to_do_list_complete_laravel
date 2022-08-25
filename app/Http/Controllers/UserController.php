@@ -148,11 +148,10 @@ class UserController extends Controller
             }
 
             $data['nama_lengkap'] = strtoupper($request->nama_lengkap);
-
+            $data['area_id'] = Divisi::with('area')->find($request->divisi_id)->area->id;
             $user->update($data);
             return redirect('user')->with(['success' => 'berhasil edit user']);
         } catch (Exception $e) {
-            error_log($e);
             return redirect('user')->with(['error' => $e->getMessage()]);
         }
     }
@@ -190,8 +189,21 @@ class UserController extends Controller
 
     public function getapproval(Request $request)
     {
-        $approval = User::where('role_id', 6)->where('area_id', $request->areaid)
-            ->orWhereIn('role_id', [3, 4, 5])->where('divisi_id', $request->divisiid)->orderBy('nama_lengkap')->get();
+        switch ($request->divisiid) {
+            case 15:
+                $approval = User::where('id', 2)->get();
+                break;
+
+            case 14:
+                $approval = User::where('id', 2)->get();
+
+                break;
+            default:
+                $approval = User::where('role_id', 6)->where('area_id', $request->areaid)
+                    ->orWhereIn('role_id', [3, 4, 5])->where('divisi_id', $request->divisiid)->orderBy('nama_lengkap')->get();
+                break;
+        }
+
         return response()->json($approval);
     }
 
@@ -217,6 +229,5 @@ class UserController extends Controller
         } catch (Exception $e) {
             return redirect('user')->with(['error' => $e->getMessage()]);
         }
-
     }
 }

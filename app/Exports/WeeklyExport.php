@@ -33,6 +33,8 @@ class WeeklyExport implements FromCollection, WithHeadings, WithMapping
     {
         return [
             'nama',
+            'area',
+            'divisi',
             'tahun',
             'week',
             'task',
@@ -47,6 +49,8 @@ class WeeklyExport implements FromCollection, WithHeadings, WithMapping
     {
         return [
             $row->user->nama_lengkap,
+            $row->user->area->name,
+            $row->user->divisi->name,
             $row->year,
             $row->week,
             $row->task,

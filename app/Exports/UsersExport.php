@@ -45,7 +45,7 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping
             $user->wr ? 'YES' : 'NO',
             $user->mn ? 'YES' : 'NO',
             $user->mr ? 'YES' : 'NO',
-            $user->approval->nama_lengkap,
+            $user->approval->nama_lengkap ?? '-',
         ];
     }
 }

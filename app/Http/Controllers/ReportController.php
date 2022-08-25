@@ -9,7 +9,6 @@ use App\Models\Divisi;
 use App\Models\Monthly;
 use App\Models\User;
 use App\Models\Weekly;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -53,7 +52,7 @@ class ReportController extends Controller
                 if ($i == 0) {
                     $daily = Daily::where('date', $monday)->where('user_id', $user->id)->orderBy('time')->get();
                     $dailyClose += count($daily->where('status', 1));
-                    $actTarget[$monday->format('D')] = $dailyClose . '/' . count($daily->where('isplan',1));
+                    $actTarget[$monday->format('D')] = $dailyClose . '/' . count($daily->where('isplan', 1));
                 } else {
                     $daily = Daily::where('date', $monday->addDay($i))->where('user_id', $user->id)->orderBy('time')->get();
                     $dailyClose += count($daily->where('status', 1));
@@ -152,7 +151,7 @@ class ReportController extends Controller
     public function exportIndividu(Request $request)
     {
         $divisi = Divisi::find($request->divisi_id);
-        return Excel::download(new ReportIndividu($request->week, $request->year, $request->divisi_id), strtolower($divisi->name) . '_report_week_' . $request->week . '_year_' . $request->year . '.xlsx',);
+        return Excel::download(new ReportIndividu($request->week, $request->year, User::orderBy('nama_lengkap')->where('divisi_id', $request->divisi_id)->get()), strtolower($divisi->name) . '_report_week_' . $request->week . '_year_' . $request->year . '.xlsx',);
     }
 
     public function indexuser(Request $request)

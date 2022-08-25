@@ -311,7 +311,7 @@ class RequestTaskController extends Controller
                     $idTaskExistings = explode(',', $requested->todo_request);
                     foreach ($idTaskExistings as $idTaskExisting) {
                         $dailyExisting = Daily::find($idTaskExisting);
-                        if (now() > Carbon::parse($dailyExisting->date / 1000)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->startOfWeek()->addWeek(1)->addHour(10)) {
+                        if (now() > Carbon::parse($dailyExisting->date / 1000)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->startOfWeek()->addWeek(1)->addDay(2)) {
                             return ResponseFormatter::error(null, 'Tidak bisa approved task yang lebih Task request tanggal ' . Carbon::parse($dailyExisting->date / 1000)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->format('d M Y'));
                         }
                         $dailyExisting->delete();
@@ -356,7 +356,7 @@ class RequestTaskController extends Controller
             $requested->approved_at = now();
             $requested->save();
             if ($requested->user->id_notif) {
-                SendNotif::sendMessage('Request task ' . $requested->jenistodo . ' sudah di setujui oleh ' . Auth::user()->nama_lengkap, array($requested->user->approval->id_notif));
+                SendNotif::sendMessage('Request task ' . $requested->jenistodo . ' sudah di setujui oleh ' . Auth::user()->nama_lengkap, array($requested->user->id_notif));
             }
             return ResponseFormatter::success(null, 'Berhasil menyetujui request');
         } catch (Exception $e) {

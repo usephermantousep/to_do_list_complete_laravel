@@ -5,7 +5,6 @@ namespace App\Exports;
 use App\Helpers\ConvertDate;
 use App\Models\User;
 use App\Models\Daily;
-use App\Models\Monthly;
 use App\Models\Weekly;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromArray;
@@ -14,24 +13,25 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class ReportIndividu implements FromArray, WithHeadings, WithMapping
 {
+    use Exportable;
+
+
     protected int $week;
     protected int $year;
-    protected int $divisi_id;
+    protected $users;
 
-    function __construct(int $week, int $year, int $divisi_id)
+    function __construct(int $week, int $year,$users)
     {
         $this->week = $week;
         $this->year = $year;
-        $this->divisi_id = $divisi_id;
+        $this->users = $users;
     }
-    use Exportable;
+
     public function array(): array
     {
-        $users = User::orderBy('nama_lengkap')->where('divisi_id', $this->divisi_id)->get();
-        // $users = User::where('id', 1165)->get();
         $report = array();
 
-        foreach ($users as $user) {
+        foreach ($this->users as $user) {
             ##SETUP VARIABLE
             //DAILY
             $onTimePoint = 0;
@@ -173,7 +173,6 @@ class ReportIndividu implements FromArray, WithHeadings, WithMapping
                 'dpoint' => $dpoint,
             ]);
         }
-        // dd($report);
         return $report;
     }
 

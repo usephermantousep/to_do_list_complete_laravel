@@ -37,7 +37,8 @@ class DailyImportUser implements ToModel, WithHeadingRow
                 if (Carbon::parse($row['date'])->weekOfYear <= now()->weekOfYear && now() > now()->startOfDay()->startOfWeek()->addDay(1)->addHour(10)) {
                     throw new Exception("Tidak bisa import daily pada week ke " . Carbon::parse($row['date'])->weekOfYear . " sudah melibihi hari selasa tanggal " . now()->startOfDay()->startOfWeek()->addDay(1)->addHour(10)->format('d M y') . " jam 10:00");
                 }
-            } else if (Carbon::parse($row['date'])->weekOfYear <= now()->weekOfYear && now() > now()->startOfDay()->startOfWeek()->addHour(17)) {
+            }
+            else if (Carbon::parse($row['date'])->weekOfYear <= now()->weekOfYear && now() > now()->startOfDay()->startOfWeek()->addHour(17)) {
                 throw new Exception("Tidak bisa import daily pada week ke ". Carbon::parse($row['date'])->weekOfYear." sudah melibihi hari senin tanggal " . now()->startOfDay()->startOfWeek()->addHour(17)->format('d M y') . " jam 17:00");
             }
         }

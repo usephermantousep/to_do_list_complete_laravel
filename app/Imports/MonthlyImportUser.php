@@ -29,6 +29,7 @@ class MonthlyImportUser implements ToModel, WithHeadingRow
         }
         $tipe = preg_replace('/\s+/', '', strtoupper($row['tipe']));
         $day = Carbon::parse($row['date']);
+
         if (now() > $day->startOfDay()->startOfMonth()->addDay(5)) {
             throw new Exception('Tidak bisa import monthly kurang dari bulan ini atau lebih dari H+5 di bulan yang berjalan');
         }

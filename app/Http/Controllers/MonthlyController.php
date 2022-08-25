@@ -239,7 +239,7 @@ class MonthlyController extends Controller
             $data = $request->all();
             $date = Carbon::parse(strtotime($request->date))->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'));
             //HANDLE SUBMIT
-            if (now() > $date->addDay(5)) {
+            if (now() > $date->addDay(5) && !$request->is_add) {
                 return redirect('monthly')->with(['error' => 'Tidak bisa input monthly lebih dari H+5 bulan ' . tgl_indo(now()->format('m'))]);
             }
 
@@ -422,7 +422,11 @@ class MonthlyController extends Controller
                 }
             }
 
-            if (now() > Carbon::parse($monthly->date / 1000)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->addDay(5)) {
+            if (now() > Carbon::parse($monthly->date / 1000)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->addDay(5) && !$monthly->is_add) {
+                return redirect('monthly')->with(['error' => 'Tidak bisa delete monthly lebih dari H+5 bulan ' . tglindo(now()->format('m'))]);
+            }
+
+            if (now() > Carbon::parse($monthly->date / 1000)->setTimezone(env('DEFAULT_TIMEZONE_APP', 'Asia/Jakarta'))->addMonth(1)->addDay(5) && $monthly->is_add ) {
                 return redirect('monthly')->with(['error' => 'Tidak bisa delete monthly lebih dari H+5 bulan ' . tglindo(now()->format('m'))]);
             }
 

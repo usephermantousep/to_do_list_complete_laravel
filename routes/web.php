@@ -117,7 +117,10 @@ Route::middleware('auth')->group(
 
             ##OVEROPEN
             Route::get('/admin/overopen', [OverOpenController::class, 'index']);
+            Route::post('/admin/overopen', [OverOpenController::class, 'store']);
             Route::get('/admin/overopen/create', [OverOpenController::class, 'create']);
+            Route::post('/admin/overopen/export', [OverOpenController::class, 'show']);
+            Route::post('/admin/overopen/delete', [OverOpenController::class, 'destroy']);
 
 
             ##SETTING

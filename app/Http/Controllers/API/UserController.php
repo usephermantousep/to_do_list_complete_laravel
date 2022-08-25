@@ -112,10 +112,16 @@ class UserController extends Controller
                     $user = User::with('area', 'role', 'divisi')->where('area_id', Auth::user()->area_id)->orderBy('nama_lengkap')->get()->except([Auth::id()]);
                     break;
                 case 1320:
-                    $user = User::with('area', 'role', 'divisi')->where('divisi_id', Auth::user()->divisi_id)->orWhere('divisi_id', 13)->orderBy('nama_lengkap')->get()->except([Auth::id()]);
+                    $user = User::with('area', 'role', 'divisi')->whereIn('divisi_id', [Auth::user()->divisi_id, 13])->orderBy('nama_lengkap')->get()->except([Auth::id()]);
+                    break;
+                case 1480:
+                    $user = User::with('area', 'role', 'divisi')->whereIn('divisi_id', [Auth::user()->divisi_id, 13])->orderBy('nama_lengkap')->get()->except([Auth::id()]);
                     break;
                 case 1341:
                     $user = User::with('area', 'role', 'divisi')->where('divisi_id', 14)->orWhere('divisi_id', 15)->orderBy('nama_lengkap')->get();
+                    break;
+                case 3:
+                    $user = User::with('area', 'role', 'divisi')->whereIn('divisi_id', [auth()->user()->divisi_id, 10])->orderBy('nama_lengkap')->get();
                     break;
                 default:
                     $user = User::with('area', 'role', 'divisi')->where('divisi_id', Auth::user()->divisi_id)->orderBy('nama_lengkap')->get()->except([Auth::id(), 1]);

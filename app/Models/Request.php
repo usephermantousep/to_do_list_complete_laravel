@@ -17,17 +17,17 @@ class Request extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class,'user_id');
+        return $this->belongsTo(User::class,'user_id')->withTrashed();
     }
 
     public function approveId()
     {
-        return $this->belongsTo(User::class, 'approval_id');
+        return $this->belongsTo(User::class, 'approval_id')->withTrashed();
     }
 
     public function approvedBy()
     {
-        return $this->belongsTo(User::class, 'approved_by');
+        return $this->belongsTo(User::class, 'approved_by')->withTrashed();
     }
 
     public function getCreatedAtAttribute($value)
@@ -40,6 +40,7 @@ class Request extends Model
     {
         if ($value) {
             return Carbon::parse($value)->getPreciseTimestamp(3);
+
         }
     }
     public function getApprovedAtAttribute($value)

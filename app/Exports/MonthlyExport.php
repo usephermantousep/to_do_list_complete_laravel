@@ -21,7 +21,7 @@ class MonthlyExport implements FromCollection, WithHeadings, WithMapping
      */
     public function collection()
     {
-        return Monthly::with('user')
+        return Monthly::with('user','user.area','user.divisi')
             ->where('date', $this->month)
             ->get()
             ->sortBy('user.nama_lengkap');
@@ -31,6 +31,8 @@ class MonthlyExport implements FromCollection, WithHeadings, WithMapping
     {
         return [
             'nama',
+            'area',
+            'divisi',
             'month',
             'task',
             'tipe',
@@ -44,6 +46,8 @@ class MonthlyExport implements FromCollection, WithHeadings, WithMapping
     {
         return [
             $row->user->nama_lengkap,
+            $row->user->area->name,
+            $row->user->divisi->name,
             date('M y', $row->date / 1000),
             $row->task,
             $row->tipe,
